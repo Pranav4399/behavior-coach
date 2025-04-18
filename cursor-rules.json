@@ -1,0 +1,75 @@
+{
+  "rules": [
+    {
+      "id": "naming-conventions",
+      "description": "Use descriptive variable and function names (camelCase for variables/functions, PascalCase for components/classes).",
+      "enforce": true
+    },
+    {
+      "id": "file-structure",
+      "description": "Organize components in feature-based folders. Prefer one component per file.",
+      "enforce": true
+    },
+    {
+      "id": "no-console",
+      "description": "Avoid using console.log in production code.",
+      "enforce": true,
+      "exceptions": ["console.error", "console.warn"]
+    },
+    {
+      "id": "prefer-const",
+      "description": "Use const over let unless reassignment is required.",
+      "enforce": true
+    },
+    {
+      "id": "no-any",
+      "description": "Avoid using `any` in TypeScript. Use proper type annotations or generics.",
+      "enforce": true
+    },
+    {
+      "id": "concise-comments",
+      "description": "Write short, clear comments. Explain what and why, not how. Avoid long-winded explanations.",
+      "enforce": true
+    },
+    {
+      "id": "plain-language",
+      "description": "Use plain, everyday language in comments and prompts. Prefer clarity over jargon or buzzwords.",
+      "enforce": true
+    },
+    {
+      "id": "natural-sentence-flow",
+      "description": "Favor short to medium-length sentences. Ensure natural flow and logical structure in comments and AI prompts.",
+      "enforce": true
+    },
+    {
+      "id": "jsx-best-practices",
+      "description": "Keep JSX readable and extract logic-heavy JSX blocks into separate components or functions.",
+      "enforce": true
+    },
+    {
+      "id": "hooks-order",
+      "description": "Follow the Rules of Hooks: use hooks at the top level and only inside React function components.",
+      "enforce": true
+    },
+    {
+      "id": "modular-css",
+      "description": "Use CSS Modules or CSS-in-JS libraries like styled-components or TailwindCSS for scoped styling.",
+      "enforce": true
+    },
+    {
+      "id": "async-error-handling",
+      "description": "Always handle errors in async functions using try/catch blocks or .catch().",
+      "enforce": true
+    },
+    {
+      "id": "component-length",
+      "description": "Break down components that are longer than 100 lines into smaller, reusable components.",
+      "enforce": true
+    },
+    {
+      "id": "ai-first-workflow",
+      "description": "Before implementing new features, describe the intent clearly in plain language so AI can generate high-quality code.",
+      "enforce": true
+    }
+  ]
+}

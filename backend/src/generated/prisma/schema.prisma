@@ -1,0 +1,84 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enum for organization type
+enum OrganizationType {
+  client
+  expert
+}
+
+model Organization {
+  id                String           @id @default(uuid())
+  name              String
+  type              OrganizationType
+  subscriptionTier  String           @map("subscription_tier")
+  logoUrl           String?          @map("logo_url")
+  customTerminology Json?            @map("custom_terminology") // Stored as JSON
+  settings          Json? // Organization-specific settings
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+  users             User[]
+  roles             Role[]
+  integrations      Integration[]
+
+  @@map("organizations")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  password  String
+  role      String   @default("user") // Default role
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relation to Organization
+  organizationId String?       @map("organization_id")
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@map("users")
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String
+  displayName String   @map("display_name")
+  permissions Json // Stored as JSON array of permission strings
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relation to Organization
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  @@map("roles")
+}
+
+model Integration {
+  id        String   @id @default(uuid())
+  type      String // e.g., "whatsapp", "sms", etc.
+  config    Json // Configuration details stored as JSON
+  status    String   @default("inactive")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relation to Organization
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  @@map("integrations")
+}
