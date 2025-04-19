@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { AppError } from './errorHandler';
-import prisma from '../prisma';
+import prisma from '../../prisma/prisma';
 
 // Extended Express Request interface to include authenticated user
 declare global {

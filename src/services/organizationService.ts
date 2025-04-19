@@ -1,6 +1,6 @@
 import { AppError } from '../middleware/errorHandler';
 import { createDefaultRoles } from './roleService';
-import prisma from '../prisma';
+import prisma from '../../prisma/prisma';
 import type { PrismaClient } from '@prisma/client';
 
 interface CreateOrganizationData {
