@@ -14,7 +14,7 @@ export default function AppLayout({
   const pathname = usePathname()
 
   // If not authenticated, redirect to login
-  if (!true) {
+  if (!isAuthenticated) {
     redirect('/login')
     return null
   }
