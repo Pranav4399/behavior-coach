@@ -1,5 +1,6 @@
 import { PrismaClient } from '../generated/prisma';
 import { execSync } from 'child_process';
+import seedDatabase from './seed';
 
 /**
  * Initialize database tables if they don't exist
@@ -41,10 +42,41 @@ export async function initializeDatabase() {
       
       // Use db push as the single, reliable method for development
       try {
+        // Ensure db push completes fully before proceeding
         execSync('npx prisma db push', { stdio: 'inherit' });
         console.log('Database tables created successfully');
+        
+        // Reconnect with a new client to ensure fresh state
+        await prisma.$disconnect();
+        const freshClient = new PrismaClient();
+        await freshClient.$connect();
+        
+        // Verify tables exist before seeding
+        const tablesExist = await freshClient.$queryRaw<[{ exists: boolean }]>`
+          SELECT EXISTS (
+            SELECT FROM information_schema.tables 
+            WHERE table_schema = 'public' 
+            AND table_name = 'organizations'
+          ) as "exists"`;
+        
+        if (!tablesExist[0].exists) {
+          throw new Error('Tables were not created successfully');
+        }
+        
+        // Seed the database with initial data
+        console.log('Seeding database with initial data...');
+        try {
+          // Run seed as a separate process to ensure clean environment
+          execSync('npm run db:seed', { stdio: 'inherit' });
+          console.log('Database seeded successfully');
+        } catch (seedError) {
+          console.error('Error seeding database:', seedError);
+          throw seedError;
+        } finally {
+          await freshClient.$disconnect();
+        }
       } catch (pushError) {
-        console.error('Failed to create database tables:', pushError);
+        console.error('Failed to create or seed database:', pushError);
         throw new Error('Could not initialize database schema');
       }
     }
