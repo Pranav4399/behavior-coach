@@ -2,9 +2,9 @@ FROM node:lts-alpine3.17
 
 WORKDIR /usr/src/app
 
-COPY package.json package-lock.json ./
+COPY package.json ./
 
-RUN npm ci
+RUN npm install
 
 COPY . .
 
