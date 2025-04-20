@@ -1,5 +1,6 @@
 import { PrismaClient } from '../generated/prisma';
 import { hash } from 'bcryptjs';
+import { ALL_PERMISSIONS } from '../src/config/permissions';
 
 // Initialize Prisma Client
 const prisma = new PrismaClient();
@@ -50,9 +51,27 @@ async function main() {
 
     console.log('Created organizations');
 
+    // Create a platform admin organization for system-level administration
+    const platformOrg = await prisma.organization.create({
+      data: {
+        name: 'System Administrators',
+        type: 'client', // Admin organization is technically a client type
+        subscriptionTier: 'enterprise',
+        logoUrl: 'https://via.placeholder.com/150',
+        settings: {
+          enableNotifications: true,
+          theme: 'dark',
+          isPlatformAdmin: true
+        }
+      }
+    });
+
+    console.log('Created platform admin organization');
+
     // Create users
     const adminPassword = await hash('admin123', 10);
     const userPassword = await hash('user123', 10);
+    const platformAdminPassword = await hash('superadmin', 10);
 
     const adminUser = await prisma.user.create({
       data: {
@@ -84,7 +103,18 @@ async function main() {
       }
     });
 
-    console.log('Created users');
+    // Create a platform admin user with all permissions
+    const platformAdminUser = await prisma.user.create({
+      data: {
+        email: 'superadmin@behaviorcoach.com',
+        name: 'Platform Administrator',
+        password: platformAdminPassword,
+        role: 'platform_admin',
+        organizationId: platformOrg.id
+      }
+    });
+
+    console.log('Created users including platform admin');
 
     // Create roles
     const adminRole = await prisma.role.create({
@@ -114,7 +144,17 @@ async function main() {
       }
     });
 
-    console.log('Created roles');
+    // Create a platform admin role with all permissions
+    const platformAdminRole = await prisma.role.create({
+      data: {
+        name: 'platform_admin',
+        displayName: 'Platform Administrator',
+        permissions: ALL_PERMISSIONS,
+        organizationId: platformOrg.id
+      }
+    });
+
+    console.log('Created roles including platform admin role');
 
     // Create integrations
     const slackIntegration = await prisma.integration.create({
@@ -143,6 +183,12 @@ async function main() {
 
     console.log('Created integrations');
     console.log('Seeding completed successfully.');
+    
+    console.log('=============================');
+    console.log('PLATFORM ADMIN CREDENTIALS:');
+    console.log('Email: superadmin@behaviorcoach.com');
+    console.log('Password: superadmin');
+    console.log('=============================');
   } catch (error) {
     console.error('Seed failed:', error);
     throw error;
@@ -164,4 +210,4 @@ if (require.main === module) {
 }
 
 // Export for direct execution
-export default main; 
+export default main;
