@@ -2,6 +2,12 @@ import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios'
 import { store } from '@/store'
 import { logout } from '@/store/auth/authSlice'
 
+// API error response interface
+interface ApiErrorData {
+  message?: string;
+  errors?: Record<string, string[]>;
+}
+
 // Create an Axios instance with a base URL and default headers
 export const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || '/api',
@@ -27,7 +33,7 @@ apiClient.interceptors.request.use(
 // Add a response interceptor to handle common errors
 apiClient.interceptors.response.use(
   (response) => response,
-  (error: AxiosError) => {
+  (error: AxiosError<ApiErrorData>) => {
     const { status } = error.response || {}
 
     // Handle authentication errors

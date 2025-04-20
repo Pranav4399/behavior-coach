@@ -9,6 +9,7 @@ import { errorHandler, AppError } from './middleware/errorHandler';
 import { indexRoutes } from './routes';
 import { organizationRoutes } from './routes/organizationRoutes';
 import { organizationMeRoutes } from './routes/organizationMeRoutes';
+import { authRoutes } from './routes/authRoutes';
 
 // Initialize express app
 const app: Express = express();
@@ -69,6 +70,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Routes
 app.use('/', indexRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/organizations', organizationRoutes);
 app.use('/api/organizations/me', organizationMeRoutes);
 

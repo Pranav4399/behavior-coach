@@ -1,0 +1,9 @@
+# Cursor editor files
+.cursor/
+
+# Reference folder
+reference/
+
+# OS files
+.DS_Store
+Thumbs.db 

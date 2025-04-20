@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { AppError } from './errorHandler';
 import prisma from '../../prisma/prisma';
+import { verifyToken } from '../utils/jwt';
 
 // Extended Express Request interface to include authenticated user
 declare global {
@@ -23,6 +24,86 @@ declare global {
     }
   }
 }
+
+/**
+ * JWT Authentication middleware - verifies the JWT token and attaches user to request
+ */
+export const authMiddleware = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    // Get token from Authorization header
+    let token;
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith('Bearer')
+    ) {
+      token = req.headers.authorization.split(' ')[1];
+    }
+
+    // Check if token exists
+    if (!token) {
+      return next(new AppError('Authentication required. Please log in.', 401));
+    }
+
+    // Verify token
+    const decoded = verifyToken(token);
+
+    // Find user
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      include: {
+        organization: true,
+      },
+    });
+
+    if (!user) {
+      return next(new AppError('The user belonging to this token no longer exists.', 401));
+    }
+
+    // Get user permissions from role
+    let permissions: string[] = [];
+    if (user.organizationId && user.role) {
+      const role = await prisma.role.findFirst({
+        where: {
+          organizationId: user.organizationId,
+          name: user.role,
+        },
+      });
+      
+      if (role) {
+        // Parse permissions from JSON
+        permissions = role.permissions as string[];
+      }
+    }
+
+    // Add user to request
+    req.user = {
+      id: user.id,
+      email: user.email,
+      name: user.name || undefined,
+      organizationId: user.organizationId || undefined,
+      role: user.role,
+      permissions,
+    };
+
+    // Add organization if user has one
+    if (user.organization) {
+      req.organization = {
+        id: user.organization.id,
+        name: user.organization.name,
+        type: user.organization.type,
+        subscriptionTier: user.organization.subscriptionTier,
+      };
+    }
+
+    next();
+  } catch (error) {
+    return next(new AppError('Invalid authentication token. Please log in again.', 401));
+  }
+};
 
 /**
  * Authentication middleware to verify the user is authenticated
