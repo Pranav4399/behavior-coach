@@ -1,11 +1,11 @@
 import { AppError } from '../../../common/middleware/errorHandler';
-import { createDefaultRoles } from '../../../domains/user/services/roleService';
-import prisma from '../../../../prisma/prisma';
-import type { PrismaClient } from '@prisma/client';
+import { createDefaultRoles } from '../../user/services/roleService';
+import * as organizationRepository from '../repositories/organizationRepository';
+import { OrganizationType } from '../models/Organization';
 
 interface CreateOrganizationData {
   name: string;
-  type: 'client' | 'expert';
+  type: OrganizationType;
   subscriptionTier: string;
   logoUrl?: string;
   customTerminology?: Record<string, string>;
@@ -17,8 +17,7 @@ interface CreateOrganizationData {
  */
 export const getAllOrganizations = async () => {
   try {
-    const organizations = await prisma.organization.findMany();
-    return organizations;
+    return await organizationRepository.findAll();
   } catch (error) {
     throw error;
   }
@@ -29,19 +28,7 @@ export const getAllOrganizations = async () => {
  */
 export const getOrganizationById = async (id: string) => {
   try {
-    const organization = await prisma.organization.findUnique({
-      where: { id },
-      include: {
-        roles: true,
-        users: true,
-      },
-    });
-    
-    if (!organization) {
-      throw new AppError('Organization not found', 404);
-    }
-    
-    return organization;
+    return await organizationRepository.findById(id);
   } catch (error) {
     throw error;
   }
@@ -52,27 +39,7 @@ export const getOrganizationById = async (id: string) => {
  */
 export const createOrganization = async (data: CreateOrganizationData) => {
   try {
-    // Create the organization within a transaction to ensure all operations succeed or fail together
-    const result = await prisma.$transaction(async (tx: PrismaClient) => {
-      // 1. Create the organization
-      const organization = await tx.organization.create({
-        data: {
-          name: data.name,
-          type: data.type,
-          subscriptionTier: data.subscriptionTier,
-          logoUrl: data.logoUrl,
-          customTerminology: data.customTerminology || {},
-          settings: data.settings || {},
-        },
-      });
-      
-      // 2. Create default roles for the organization
-      const roles = await createDefaultRoles(organization.id, data.type);
-      
-      return { organization, roles };
-    });
-    
-    return result;
+    return await organizationRepository.createWithRoles(data, createDefaultRoles);
   } catch (error) {
     throw error;
   }
@@ -85,56 +52,12 @@ export const listOrganizations = async (
   page = 1,
   limit = 10,
   filters: {
-    type?: 'client' | 'expert';
+    type?: OrganizationType;
     search?: string;
   } = {}
 ) => {
   try {
-    const skip = (page - 1) * limit;
-    
-    // Build filters
-    const where: any = {};
-    
-    if (filters.type) {
-      where.type = filters.type;
-    }
-    
-    if (filters.search) {
-      where.name = {
-        contains: filters.search,
-        mode: 'insensitive',
-      };
-    }
-    
-    // Get count of matching organizations
-    const totalCount = await prisma.organization.count({ where });
-    
-    // Get paginated results
-    const organizations = await prisma.organization.findMany({
-      where,
-      skip,
-      take: limit,
-      include: {
-        _count: {
-          select: {
-            users: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
-    
-    return {
-      results: organizations,
-      pagination: {
-        page,
-        limit,
-        totalCount,
-        totalPages: Math.ceil(totalCount / limit),
-      },
-    };
+    return await organizationRepository.findWithFilters(page, limit, filters);
   } catch (error) {
     throw error;
   }
@@ -147,6 +70,7 @@ export const updateOrganization = async (
   id: string,
   data: {
     name?: string;
+    type?: OrganizationType;
     subscriptionTier?: string;
     logoUrl?: string;
     customTerminology?: Record<string, string>;
@@ -154,22 +78,7 @@ export const updateOrganization = async (
   }
 ) => {
   try {
-    // Check if organization exists
-    const existingOrg = await prisma.organization.findUnique({
-      where: { id },
-    });
-    
-    if (!existingOrg) {
-      throw new AppError('Organization not found', 404);
-    }
-    
-    // Update the organization
-    const updatedOrganization = await prisma.organization.update({
-      where: { id },
-      data,
-    });
-    
-    return updatedOrganization;
+    return await organizationRepository.update(id, data);
   } catch (error) {
     throw error;
   }
@@ -180,72 +89,31 @@ export const updateOrganization = async (
  */
 export const deleteOrganization = async (id: string) => {
   try {
-    // Check if organization exists
-    const existingOrg = await prisma.organization.findUnique({
-      where: { id },
-    });
-    
-    if (!existingOrg) {
-      throw new AppError('Organization not found', 404);
-    }
-    
-    // Delete the organization and related data in a transaction
-    await prisma.$transaction([
-      // Delete roles
-      prisma.role.deleteMany({
-        where: { organizationId: id },
-      }),
-      // Delete users (in a real app, you might want to archive them instead)
-      prisma.user.deleteMany({
-        where: { organizationId: id },
-      }),
-      // Delete integrations
-      prisma.integration.deleteMany({
-        where: { organizationId: id },
-      }),
-      // Finally delete the organization
-      prisma.organization.delete({
-        where: { id },
-      }),
-    ]);
-    
-    return { success: true };
+    await organizationRepository.remove(id);
   } catch (error) {
     throw error;
   }
 };
 
 /**
- * Approve an expert organization (platform admin only)
+ * Approve an expert organization (for admin use only)
  */
 export const approveExpertOrganization = async (id: string) => {
   try {
-    // Check if organization exists and is expert type
-    const existingOrg = await prisma.organization.findUnique({
-      where: { id },
-    });
+    const organization = await organizationRepository.findById(id);
     
-    if (!existingOrg) {
-      throw new AppError('Organization not found', 404);
-    }
-    
-    if (existingOrg.type !== 'expert') {
+    if (organization.type !== 'expert') {
       throw new AppError('Only expert organizations can be approved', 400);
     }
     
-    // Update the organization settings to mark it as approved
-    const updatedOrganization = await prisma.organization.update({
-      where: { id },
-      data: {
-        settings: {
-          ...(existingOrg.settings as object || {}),
-          approved: true,
-          approvedAt: new Date().toISOString(),
-        },
-      },
+    // This is a placeholder - you might want to update a status field in your actual implementation
+    return await organizationRepository.update(id, {
+      settings: {
+        ...organization.settings,
+        approved: true,
+        approvedAt: new Date().toISOString()
+      }
     });
-    
-    return updatedOrganization;
   } catch (error) {
     throw error;
   }

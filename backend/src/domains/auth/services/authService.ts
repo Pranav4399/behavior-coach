@@ -1,6 +1,6 @@
-import bcrypt from 'bcryptjs';
-import prisma from '../../../../prisma/prisma';
+import * as authRepository from '../repositories/authRepository';
 import { generateToken } from '../utils/jwt';
+import { User } from '../models/User';
 
 interface SignupData {
   email: string;
@@ -27,42 +27,20 @@ export class AuthService {
    * @returns User object and JWT token
    */
   async signup(userData: SignupData): Promise<AuthResult> {
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email: userData.email }
-    });
-
-    if (existingUser) {
-      throw new Error('User with this email already exists');
+    try {
+      // Create user using repository
+      const user = await authRepository.create(userData);
+      
+      // Generate token
+      const token = generateToken(user.id);
+      
+      return {
+        user: user.toSafeObject(),
+        token
+      };
+    } catch (error) {
+      throw error;
     }
-
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(userData.password, salt);
-
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        email: userData.email,
-        password: hashedPassword,
-        name: userData.name || null,
-        organizationId: userData.organizationId || null,
-      }
-    });
-
-    // Generate token
-    const token = generateToken(user.id);
-
-    return {
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        organizationId: user.organizationId
-      },
-      token
-    };
   }
 
   /**
@@ -72,35 +50,20 @@ export class AuthService {
    * @returns User object and JWT token if authentication successful
    */
   async login(email: string, password: string): Promise<AuthResult> {
-    // Find user by email
-    const user = await prisma.user.findUnique({
-      where: { email }
-    });
-
-    if (!user) {
-      throw new Error('Invalid credentials');
+    try {
+      // Verify credentials using repository
+      const user = await authRepository.verifyCredentials(email, password);
+      
+      // Generate token
+      const token = generateToken(user.id);
+      
+      return {
+        user: user.toSafeObject(),
+        token
+      };
+    } catch (error) {
+      throw error;
     }
-
-    // Check password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-
-    if (!isPasswordValid) {
-      throw new Error('Invalid credentials');
-    }
-
-    // Generate token
-    const token = generateToken(user.id);
-
-    return {
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        organizationId: user.organizationId
-      },
-      token
-    };
   }
 
   /**
@@ -109,20 +72,41 @@ export class AuthService {
    * @returns User object if found
    */
   async getUserById(userId: string) {
-    const user = await prisma.user.findUnique({
-      where: { id: userId }
-    });
-
-    if (!user) {
-      throw new Error('User not found');
+    try {
+      const user = await authRepository.findById(userId);
+      return user.toSafeObject();
+    } catch (error) {
+      throw error;
     }
-
-    return {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-      organizationId: user.organizationId
-    };
+  }
+  
+  /**
+   * Get user with organization details
+   * @param userId User ID
+   * @returns User and organization objects
+   */
+  async getUserWithOrganization(userId: string) {
+    try {
+      const { user, organization } = await authRepository.findWithOrganization(userId);
+      return {
+        user: user.toSafeObject(),
+        organization
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+  
+  /**
+   * Get user permissions
+   * @param userId User ID
+   * @returns Array of permission strings
+   */
+  async getUserPermissions(userId: string): Promise<string[]> {
+    try {
+      return await authRepository.getUserPermissions(userId);
+    } catch (error) {
+      throw error;
+    }
   }
 } 

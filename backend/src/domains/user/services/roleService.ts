@@ -12,6 +12,15 @@ export const createDefaultRoles = async (
   organizationType: 'client' | 'expert'
 ) => {
   try {
+    // Verify that the organization exists
+    const organization = await prisma.organization.findUnique({
+      where: { id: organizationId }
+    });
+    
+    if (!organization) {
+      throw new AppError(`Organization with ID ${organizationId} not found`, 404);
+    }
+    
     const rolesToCreate = [];
     
     // Add organization admin role for all organization types
@@ -69,9 +78,7 @@ export const createDefaultRoles = async (
             name: role.name,
             displayName: role.displayName,
             permissions: role.permissions,
-            organization: {
-              connect: { id: role.organizationId }
-            }
+            organizationId: role.organizationId
           }
         })
       )

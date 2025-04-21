@@ -1,7 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import { AppError } from '../../../common/middleware/errorHandler';
-import prisma from '../../../../prisma/prisma';
 import { verifyToken } from '../utils/jwt';
+import { AuthService } from '../services/authService';
+
+const authService = new AuthService();
 
 // Extended Express Request interface to include authenticated user
 declare global {
@@ -51,63 +53,44 @@ export const authMiddleware = async (
     // Verify token
     const decoded = verifyToken(token);
 
-    // Find user
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.id },
-      include: {
-        organization: true,
-      },
-    });
+    try {
+      // Get user with organization
+      const { user, organization } = await authService.getUserWithOrganization(decoded.id);
 
-    if (!user) {
-      return next(new AppError('The user belonging to this token no longer exists.', 401));
-    }
+      // Get user permissions
+      const permissions = await authService.getUserPermissions(decoded.id);
 
-    // Get user permissions from role
-    let permissions: string[] = [];
-    if (user.organizationId && user.role) {
-      const role = await prisma.role.findFirst({
-        where: {
-          organizationId: user.organizationId,
-          name: user.role,
-        },
-      });
-      
-      if (role) {
-        // Parse permissions from JSON
-        permissions = role.permissions as string[];
-      }
-    }
-
-    // Add user to request
-    req.user = {
-      id: user.id,
-      email: user.email,
-      name: user.name || undefined,
-      organizationId: user.organizationId || undefined,
-      role: user.role,
-      permissions,
-    };
-
-    // Add organization if user has one
-    if (user.organization) {
-      req.organization = {
-        id: user.organization.id,
-        name: user.organization.name,
-        type: user.organization.type,
-        subscriptionTier: user.organization.subscriptionTier,
+      // Add user to request
+      req.user = {
+        id: user.id,
+        email: user.email,
+        name: user.name || undefined,
+        organizationId: user.organizationId || undefined,
+        role: user.role,
+        permissions,
       };
-    }
 
-    next();
+      // Add organization if user has one
+      if (organization) {
+        req.organization = {
+          id: organization.id,
+          name: organization.name,
+          type: organization.type,
+          subscriptionTier: organization.subscriptionTier,
+        };
+      }
+
+      next();
+    } catch (error) {
+      return next(new AppError('User not found or no longer exists.', 401));
+    }
   } catch (error) {
     return next(new AppError('Invalid authentication token. Please log in again.', 401));
   }
 };
 
 /**
- * Authentication middleware to verify the user is authenticated
- * In a real app, this would verify JWT tokens or session cookies
+ * Authentication middleware using x-user-id header (for testing/development)
  */
 export const authenticate = async (
   req: Request,
@@ -123,54 +106,37 @@ export const authenticate = async (
       return next(new AppError('Authentication required', 401));
     }
     
-    // Find the user and include their organization
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      include: {
-        organization: true,
-      },
-    });
-    
-    if (!user) {
+    try {
+      // Get user with organization
+      const { user, organization } = await authService.getUserWithOrganization(userId);
+      
+      // Get user permissions
+      const permissions = await authService.getUserPermissions(userId);
+      
+      // Add user to request
+      req.user = {
+        id: user.id,
+        email: user.email,
+        name: user.name || undefined,
+        organizationId: user.organizationId || undefined,
+        role: user.role,
+        permissions,
+      };
+      
+      // Add organization if user has one
+      if (organization) {
+        req.organization = {
+          id: organization.id,
+          name: organization.name,
+          type: organization.type,
+          subscriptionTier: organization.subscriptionTier,
+        };
+      }
+      
+      next();
+    } catch (error) {
       return next(new AppError('User not found', 404));
     }
-    
-    // If user has an organization, fetch their role details to get permissions
-    let permissions: string[] = [];
-    if (user.organizationId && user.role) {
-      const role = await prisma.role.findFirst({
-        where: {
-          organizationId: user.organizationId,
-          name: user.role,
-        },
-      });
-      
-      if (role) {
-        // Parse permissions from JSON
-        permissions = role.permissions as string[];
-      }
-    }
-    
-    // Add user and organization to the request object
-    req.user = {
-      id: user.id,
-      email: user.email,
-      name: user.name || undefined,
-      organizationId: user.organizationId || undefined,
-      role: user.role,
-      permissions,
-    };
-    
-    if (user.organization) {
-      req.organization = {
-        id: user.organization.id,
-        name: user.organization.name,
-        type: user.organization.type,
-        subscriptionTier: user.organization.subscriptionTier,
-      };
-    }
-    
-    next();
   } catch (error) {
     next(error);
   }
@@ -198,7 +164,7 @@ export const authorize = (requiredPermissions: string[] = []) => {
         return next(); // Platform admins have access to everything
       }
       
-      // Check if the user has all the required permissions
+      // Check if the user has all required permissions
       const hasAllPermissions = requiredPermissions.every(permission => 
         req.user!.permissions.includes(permission)
       );
@@ -215,7 +181,7 @@ export const authorize = (requiredPermissions: string[] = []) => {
 };
 
 /**
- * Middleware to check if the user has the org_admin role
+ * Middleware to check if the user is an organization admin
  */
 export const requireOrgAdmin = (
   req: Request,
@@ -228,32 +194,42 @@ export const requireOrgAdmin = (
       return next(new AppError('Authentication required', 401));
     }
     
-    // Check if the user has the org_admin role
-    if (req.user.role !== 'org_admin' && req.user.role !== 'platform_admin') {
-      return next(new AppError('Only organization administrators can perform this action', 403));
+    // Check if the user has an organization
+    if (!req.user.organizationId) {
+      return next(new AppError('You are not a member of any organization', 403));
     }
     
-    next();
+    // Check if the user has the org_admin role or is a platform admin
+    if (req.user.role === 'org_admin' || req.user.role === 'platform_admin') {
+      return next();
+    }
+    
+    return next(new AppError('You must be an organization admin to perform this action', 403));
   } catch (error) {
     next(error);
   }
 };
 
 /**
- * Middleware to restrict access based on organization type
- * @param allowedTypes - Array of organization types allowed
+ * Middleware to restrict access to specific organization types
+ * @param allowedTypes - Array of organization types allowed for the route
  */
 export const restrictToOrgType = (allowedTypes: ('client' | 'expert')[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
-      // Check if organization exists on the request
-      if (!req.organization) {
-        return next(new AppError('Organization information required', 400));
+      // Check if user exists on the request
+      if (!req.user) {
+        return next(new AppError('Authentication required', 401));
       }
       
-      // Check if the organization type is allowed
+      // Check if the user has an organization
+      if (!req.organization) {
+        return next(new AppError('You are not a member of any organization', 403));
+      }
+      
+      // Check if the user's organization type is allowed
       if (!allowedTypes.includes(req.organization.type)) {
-        return next(new AppError('This action is not available for your organization type', 403));
+        return next(new AppError(`This action is only available to ${allowedTypes.join(' or ')} organizations`, 403));
       }
       
       next();

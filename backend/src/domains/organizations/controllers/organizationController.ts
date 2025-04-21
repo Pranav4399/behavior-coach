@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as organizationService from '../services/organizationService';
+import { OrganizationType } from '../models/Organization';
 
 /**
  * Get all organizations
@@ -59,11 +60,15 @@ export const createOrganization = async (
   next: NextFunction
 ) => {
   try {
-    const { name, type, subscriptionTier } = req.body;
+    const { name, type, subscriptionTier, logoUrl, customTerminology, settings } = req.body;
+    
     const newOrganization = await organizationService.createOrganization({
       name,
-      type,
-      subscriptionTier
+      type: type as OrganizationType,
+      subscriptionTier,
+      logoUrl,
+      customTerminology,
+      settings
     });
     
     res.status(201).json({
@@ -88,11 +93,18 @@ export const updateOrganization = async (
 ) => {
   try {
     const organizationId = req.params.id;
-    const { name, type, subscriptionTier } = req.body;
+    const { name, type, subscriptionTier, logoUrl, customTerminology, settings } = req.body;
     
     const updatedOrganization = await organizationService.updateOrganization(
       organizationId,
-      { name, subscriptionTier }
+      { 
+        name, 
+        type: type as OrganizationType, 
+        subscriptionTier,
+        logoUrl,
+        customTerminology,
+        settings
+      }
     );
     
     res.status(200).json({
