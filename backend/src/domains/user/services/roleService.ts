@@ -1,6 +1,6 @@
-import { ROLE_PERMISSIONS } from '../config/permissions';
-import { AppError } from '../middleware/errorHandler';
-import prisma, { type PrismaClient } from '../../prisma/prisma';
+import { ROLE_PERMISSIONS } from '../../../config/permissions';
+import { AppError } from '../../../common/middleware/errorHandler';
+import prisma, { type PrismaClient } from '../../../../prisma/prisma';
 
 /**
  * Creates default roles for a new organization based on its type

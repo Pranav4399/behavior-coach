@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '../services/authService';
-import { AppError } from '../middleware/errorHandler';
+import { AppError } from '../../../common/middleware/errorHandler';
 
 const authService = new AuthService();
 

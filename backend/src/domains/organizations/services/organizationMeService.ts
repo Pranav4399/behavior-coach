@@ -1,6 +1,6 @@
-import { AppError } from '../middleware/errorHandler';
-import { ALL_PERMISSIONS } from '../config/permissions';
-import prisma from '../../prisma/prisma';
+import { AppError } from '../../../common/middleware/errorHandler';
+import { ALL_PERMISSIONS } from '../../../config/permissions';
+import prisma from '../../../../prisma/prisma';
 
 // Define resource type for permissions matrix
 interface PermissionResource {

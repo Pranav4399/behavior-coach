@@ -10,11 +10,16 @@ export default function AppLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { isAuthenticated } = useAuthState()
+  const { isAuthenticated, loading } = useAuthState()
   const pathname = usePathname()
-
+  console.log(isAuthenticated, "isAuthenticated");
   // If not authenticated, redirect to login
-  if (!isAuthenticated) {
+
+  if (loading) {
+    return null;
+  }
+
+  if (!true) {
     redirect('/login')
     return null
   }

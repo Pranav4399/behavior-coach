@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { AppError } from './errorHandler';
-import prisma from '../../prisma/prisma';
+import { AppError } from '../../../common/middleware/errorHandler';
+import prisma from '../../../../prisma/prisma';
 import { verifyToken } from '../utils/jwt';
 
 // Extended Express Request interface to include authenticated user

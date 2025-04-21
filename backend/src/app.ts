@@ -5,11 +5,11 @@ import morgan from 'morgan';
 import { rateLimit } from 'express-rate-limit';
 import swaggerJSDoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
-import { errorHandler, AppError } from './middleware/errorHandler';
-import { indexRoutes } from './routes';
-import { organizationRoutes } from './routes/organizationRoutes';
-import { organizationMeRoutes } from './routes/organizationMeRoutes';
-import { authRoutes } from './routes/authRoutes';
+import { errorHandler, AppError } from './common/middleware/errorHandler';
+import { indexRoutes } from './common/routes';
+import { organizationRoutes } from './domains/organizations/routes/organizationRoutes';
+import { organizationMeRoutes } from './domains/organizations/routes/organizationMeRoutes';
+import { authRoutes } from './domains/auth/routes/authRoutes';
 
 // Initialize express app
 const app: Express = express();
