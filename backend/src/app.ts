@@ -10,6 +10,7 @@ import { indexRoutes } from './common/routes';
 import { organizationRoutes } from './domains/organizations/routes/organizationRoutes';
 import { organizationMeRoutes } from './domains/organizations/routes/organizationMeRoutes';
 import { authRoutes } from './domains/auth/routes/authRoutes';
+import { userRoutes } from './domains/user/routes/userRoutes';
 
 // Initialize express app
 const app: Express = express();
@@ -77,6 +78,7 @@ app.use('/', indexRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/organizations', organizationRoutes);
 app.use('/api/organizations/me', organizationMeRoutes);
+app.use('/api/users', userRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {

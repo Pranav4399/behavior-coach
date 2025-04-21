@@ -38,19 +38,41 @@ model Organization {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String?
-  password  String
-  role      String   @default("user") // Default role
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id            String   @id @default(uuid())
+  email         String   @unique
+  name          String?
+  password      String
+  role          String   @default("user") // Default role
+  status        String?  @default("active")
+  lastLoginAt   DateTime? @map("last_login_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
   
   // Relation to Organization
   organizationId String?       @map("organization_id")
   organization   Organization? @relation(fields: [organizationId], references: [id])
+  
+  // Relation to UserPreferences
+  preferences    UserPreferences?
 
   @@map("users")
+}
+
+model UserPreferences {
+  id                  String   @id @default(uuid())
+  userId              String   @unique @map("user_id")
+  user                User     @relation(fields: [userId], references: [id])
+  theme               String   @default("system")
+  language            String   @default("en")
+  emailNotifications  Boolean  @default(true) @map("email_notifications")
+  pushNotifications   Boolean  @default(true) @map("push_notifications")
+  timezone            String   @default("UTC")
+  dateFormat          String   @default("YYYY-MM-DD") @map("date_format")
+  customSettings      Json?    @map("custom_settings")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  @@map("user_preferences")
 }
 
 model Role {
