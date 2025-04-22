@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import * as organizationMeController from '../controllers/organizationMeController';
-import { authenticate, authorize, requireOrgAdmin, restrictToOrgType } from '../../auth/middleware/authMiddleware';
+import { authMiddleware as authenticate, authorize, requireOrgAdmin, restrictToOrgType } from '../../auth/middleware/authMiddleware';
 import { PERMISSIONS } from '../../../config/permissions';
 
 const router = Router();

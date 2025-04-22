@@ -29,11 +29,7 @@ const buildUrl = (endpoint: string, params?: Record<string, string>) => {
 // Helper function to get auth token
 const getAuthToken = () => {
   try {
-    const authStorage = localStorage.getItem('auth-storage');
-    if (authStorage) {
-      const { state } = JSON.parse(authStorage);
-      return state?.token;
-    }
+    return localStorage.getItem('token');
   } catch (error) {
     console.error('Error reading auth token:', error);
   }
@@ -68,19 +64,19 @@ export async function apiClient<T>(
     const response = await fetch(url, requestOptions);
     
     // Handle unauthorized access
-    if (response.status === 401) {
-      // Clear auth data
-      localStorage.removeItem('auth-storage');
+    // if (response.status === 401) {
+    //   // Clear auth data
+    //   localStorage.removeItem('auth-storage');
       
-      // Redirect to login if not already on login page
-      if (!window.location.pathname.startsWith('/login')) {
-        // Store the current path for redirect after login
-        localStorage.setItem('redirectAfterLogin', window.location.pathname);
-        window.location.href = '/login';
-      }
+    //   // Redirect to login if not already on login page
+    //   if (!window.location.pathname.startsWith('/login')) {
+    //     // Store the current path for redirect after login
+    //     localStorage.setItem('redirectAfterLogin', window.location.pathname);
+    //     window.location.href = '/login';
+    //   }
       
-      throw new Error('Session expired. Please login again.');
-    }
+    //   throw new Error('Session expired. Please login again.');
+    // }
     
     // Handle other API errors
     if (!response.ok) {
