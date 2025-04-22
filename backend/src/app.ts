@@ -11,13 +11,25 @@ import { organizationRoutes } from './domains/organizations/routes/organizationR
 import { organizationMeRoutes } from './domains/organizations/routes/organizationMeRoutes';
 import { authRoutes } from './domains/auth/routes/authRoutes';
 import { userRoutes } from './domains/user/routes/userRoutes';
+import { ENV } from './config/env';
 
 // Initialize express app
 const app: Express = express();
 
+// CORS configuration using environment variables
+const corsOptions = {
+  origin: ENV.CORS.ORIGINS,
+  credentials: ENV.CORS.CREDENTIALS,
+  methods: ENV.CORS.METHODS,
+  allowedHeaders: ENV.CORS.ALLOWED_HEADERS,
+  exposedHeaders: ENV.CORS.EXPOSED_HEADERS,
+  maxAge: ENV.CORS.MAX_AGE,
+  preflightContinue: ENV.CORS.PREFLIGHT_CONTINUE
+};
+
 // Security middleware
 app.use(helmet());
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

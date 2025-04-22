@@ -1,5 +1,12 @@
 // Common types used across the application
 
+// API standard response format
+export interface ApiResponse<T> {
+  status: string;
+  results: number;
+  data: T;
+}
+
 // Pagination response type
 export interface PaginatedResponse<T> {
   data: T[];

@@ -1,5 +1,5 @@
 // Base API client for making requests
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 
 type RequestOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
@@ -10,7 +10,12 @@ type RequestOptions = {
 
 // Helper function to build URL with query parameters
 const buildUrl = (endpoint: string, params?: Record<string, string>) => {
-  const url = new URL(`${API_BASE_URL}${endpoint}`);
+  let url: URL;
+  if (endpoint.startsWith('http')) {
+    url = new URL(endpoint);
+  } else {
+    url = new URL(`${API_BASE_URL}${endpoint}`, window.location.origin);
+  }
   
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
@@ -21,6 +26,20 @@ const buildUrl = (endpoint: string, params?: Record<string, string>) => {
   return url.toString();
 };
 
+// Helper function to get auth token
+const getAuthToken = () => {
+  try {
+    const authStorage = localStorage.getItem('auth-storage');
+    if (authStorage) {
+      const { state } = JSON.parse(authStorage);
+      return state?.token;
+    }
+  } catch (error) {
+    console.error('Error reading auth token:', error);
+  }
+  return null;
+};
+
 // Main API client function
 export async function apiClient<T>(
   endpoint: string,
@@ -28,10 +47,15 @@ export async function apiClient<T>(
 ): Promise<T> {
   const url = buildUrl(endpoint, params);
   
+  // Get auth token
+  const token = getAuthToken();
+  
   const requestOptions: RequestInit = {
     method,
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
       ...headers
     },
   };
@@ -40,20 +64,40 @@ export async function apiClient<T>(
     requestOptions.body = JSON.stringify(body);
   }
   
-  const response = await fetch(url, requestOptions);
-  
-  // Handle API errors
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(
-      errorData.message || `API Error: ${response.status} ${response.statusText}`
-    );
+  try {
+    const response = await fetch(url, requestOptions);
+    
+    // Handle unauthorized access
+    if (response.status === 401) {
+      // Clear auth data
+      localStorage.removeItem('auth-storage');
+      
+      // Redirect to login if not already on login page
+      if (!window.location.pathname.startsWith('/login')) {
+        // Store the current path for redirect after login
+        localStorage.setItem('redirectAfterLogin', window.location.pathname);
+        window.location.href = '/login';
+      }
+      
+      throw new Error('Session expired. Please login again.');
+    }
+    
+    // Handle other API errors
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.message || `API Error: ${response.status} ${response.statusText}`
+      );
+    }
+    
+    // Return empty object for 204 No Content
+    if (response.status === 204) {
+      return {} as T;
+    }
+    
+    return response.json();
+  } catch (error) {
+    console.error('API request failed:', error);
+    throw error;
   }
-  
-  // Return empty object for 204 No Content
-  if (response.status === 204) {
-    return {} as T;
-  }
-  
-  return response.json();
 } 
