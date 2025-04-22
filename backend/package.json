@@ -13,7 +13,8 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:docs": "tsx scripts/generate-db-docs.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "db:deploy": "npx prisma migrate deploy && npx prisma generate"
+    "db:deploy": "npx prisma migrate deploy && npx prisma generate",
+    "dev:nodemon": "nodemon --exec 'tsx' server.ts --ext ts,js,json"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

@@ -1,5 +1,6 @@
 # Cursor editor files
 .cursor/
+.vscode/
 
 # Reference folder
 reference/

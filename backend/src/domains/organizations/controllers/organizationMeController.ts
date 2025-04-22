@@ -11,6 +11,7 @@ export const getCurrentOrganization = async (
   next: NextFunction
 ) => {
   try {
+    console.log('req.user', req.user);
     const organization = await organizationMeService.getCurrentUserOrganization(req.user!.id);
     
     res.status(200).json({

@@ -71,14 +71,51 @@ const swaggerOptions = {
 };
 
 const swaggerSpec = swaggerJSDoc(swaggerOptions);
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+
+// #region Remove this section when we have a production environment
+
+// Custom Swagger UI options with authentication pre-filled for development
+const swaggerUiOptions = {
+  explorer: true,
+  swaggerOptions: {
+    persistAuthorization: true
+  },
+  initOAuth: {
+    // Pre-fill the auth token for development environment
+    useBasicAuthenticationWithAccessCodeGrant: false
+  }
+};
+
+// In development, customize Swagger UI to include the auth token
+if (process.env.NODE_ENV !== 'production') {
+  (swaggerUiOptions.swaggerOptions as any) = {
+    ...swaggerUiOptions.swaggerOptions,
+    // Pre-populated auth token for development
+    authAction: {
+      bearerAuth: {
+        name: "bearerAuth",
+        schema: {
+          type: "apiKey",
+          in: "header",
+          name: "Authorization",
+          description: ""
+        },
+        value: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijg3ZjRhM2JhLTkzNDItNGFiYy1hYmEyLWJmNDViNTNhMGI5YyIsImlhdCI6MTc0NTIzMzg2OH0.-O0lNiJPYlP85ygvxoTiw2W1v3rLUZPQMlTn0rJ-DdM"
+      }
+    }
+  };
+}
+
+// #endregion
 
 // Routes
 app.use('/', indexRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/organizations', organizationRoutes);
 app.use('/api/organizations/me', organizationMeRoutes);
+app.use('/api/organizations', organizationRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
 
 // 404 handler
 app.use((req: Request, res: Response) => {

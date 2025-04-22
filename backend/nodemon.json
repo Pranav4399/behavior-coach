@@ -1,0 +1,9 @@
+{
+  "watch": ["src", "server.ts"],
+  "ext": "ts,js,json",
+  "ignore": ["node_modules", "dist"],
+  "exec": "tsx server.ts",
+  "legacyWatch": false,
+  "verbose": true,
+  "delay": 500
+} 

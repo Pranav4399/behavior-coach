@@ -25,6 +25,11 @@ services:
       - '3000:3000'
     stdin_open: true
     tty: true
+    volumes:
+      - ./src:/usr/src/app/src
+      - ./server.ts:/usr/src/app/server.ts
+      - ./nodemon.json:/usr/src/app/nodemon.json
+      - ./prisma:/usr/src/app/prisma
     depends_on:
       postgres_db:
         condition: service_healthy
