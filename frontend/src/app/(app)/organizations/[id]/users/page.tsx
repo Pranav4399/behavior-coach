@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useParams } from 'next/navigation';
 import { useUsers } from '@/hooks/api/use-users';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,9 +35,12 @@ import { Plus, Search, RefreshCw } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { UserInviteDialog } from '@/components/users/user-invite-dialog';
 
-export default function UsersPage() {
+export default function OrganizationUsersPage() {
+  const params = useParams();
+  const organizationId = params.id as string;
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [filters, setFilters] = useState<UserFilters>({
+    organizationId,
     page: 1,
     limit: 10,
   });
@@ -88,9 +92,9 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="container py-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Users</h1>
+        <h2 className="text-2xl font-bold">Users</h2>
         <Button onClick={() => setIsInviteDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Invite User
@@ -170,7 +174,7 @@ export default function UsersPage() {
                 <TableRow 
                   key={user.id} 
                   className="cursor-pointer hover:bg-accent/50"
-                  onClick={() => router.push(`/users/${user.id}`)}
+                  onClick={() => router.push(`/organizations/${organizationId}/users/${user.id}`)}
                 >
                   <TableCell>
                     {user.name || 'N/A'}
@@ -193,7 +197,7 @@ export default function UsersPage() {
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        router.push(`/users/${user.id}`);
+                        router.push(`/organizations/${organizationId}/users/${user.id}`);
                       }}
                     >
                       View
@@ -240,6 +244,7 @@ export default function UsersPage() {
       <UserInviteDialog 
         open={isInviteDialogOpen} 
         onOpenChange={setIsInviteDialogOpen}
+        organizationId={organizationId}
       />
     </div>
   );

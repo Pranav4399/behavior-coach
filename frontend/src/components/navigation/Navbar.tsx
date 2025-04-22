@@ -18,7 +18,7 @@ interface NavbarProps {
 export default function Navbar({ toggleSidebar, isSidebarOpen }: NavbarProps) {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-card">
-      <div className="container flex h-16 items-center justify-between px-4 sm:px-6">
+      <div className="flex h-16 items-center justify-between px-4 sm:px-6 w-full">
         <div className="flex items-center">
           {/* Mobile sidebar toggle */}
           <button
@@ -38,18 +38,18 @@ export default function Navbar({ toggleSidebar, isSidebarOpen }: NavbarProps) {
         </div>
         
         {/* Right side navigation items */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center gap-2">
           {/* Theme toggle button */}
           <ThemeToggle />
           
           {/* Notifications button */}
           <button
             type="button"
-            className="inline-flex items-center justify-center rounded-md p-2 text-foreground hover:bg-muted/50 relative"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-md text-foreground hover:bg-muted/50 relative"
             aria-label="Notifications"
           >
             <Bell size={20} />
-            <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive"></span>
+            <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-destructive"></span>
           </button>
           
           {/* User profile dropdown */}

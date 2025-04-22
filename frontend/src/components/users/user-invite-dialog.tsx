@@ -45,9 +45,10 @@ type UserInviteFormValues = z.infer<typeof formSchema>;
 interface UserInviteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  organizationId?: string;
 }
 
-export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) {
+export function UserInviteDialog({ open, onOpenChange, organizationId }: UserInviteDialogProps) {
   const form = useForm<UserInviteFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -60,16 +61,19 @@ export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) 
   const { mutate: inviteUser, isPending } = useInviteUser();
 
   const onSubmit = (values: UserInviteFormValues) => {
-    inviteUser(values, {
-      onSuccess: () => {
-        toast.success('User invitation sent successfully');
-        form.reset();
-        onOpenChange(false);
-      },
-      onError: (error) => {
-        toast.error(error.message || 'Failed to send invitation');
-      },
-    });
+    inviteUser(
+      { ...values, organizationId },
+      {
+        onSuccess: () => {
+          toast.success('User invitation sent successfully');
+          form.reset();
+          onOpenChange(false);
+        },
+        onError: (error) => {
+          toast.error(error.message || 'Failed to send invitation');
+        },
+      }
+    );
   };
 
   return (

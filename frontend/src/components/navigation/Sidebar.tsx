@@ -1,19 +1,15 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, Settings, Building2, CreditCard, BarChart } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { navigationItems, NavigationItem } from '@/config/navigation';
+import { useOrganization } from '@/hooks/api/use-organizations';
 
 interface SidebarProps {
   isOpen?: boolean;
   onClose?: () => void;
-}
-
-interface NavigationItem {
-  name: string;
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
 }
 
 /**
@@ -21,16 +17,25 @@ interface NavigationItem {
  */
 export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const { isAuthenticated, user } = useAuth();
+  const [orgName, setOrgName] = useState('My Organization');
   
-  // Navigation items
-  const navigation: NavigationItem[] = [
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Organizations', href: '/organizations', icon: Building2 },
-    { name: 'Users', href: '/users', icon: Users },
-    { name: 'Subscription', href: '/subscription', icon: CreditCard },
-    { name: 'Analytics', href: '/analytics', icon: BarChart },
-    { name: 'Settings', href: '/settings', icon: Settings },
-  ];
+  // Fetch organization details if user is authenticated and has an organizationId
+  const { data: orgData, isLoading } = user?.organizationId 
+    ? useOrganization(user.organizationId)
+    : { data: undefined, isLoading: false };
+
+  // Update organization name when data is loaded
+  useEffect(() => {
+    if (orgData?.data?.organization?.name) {
+      setOrgName(orgData.data.organization.name);
+    }
+  }, [orgData]);
+  
+  // Filter navigation items based on authentication
+  const filteredNavigation = navigationItems.filter(item => 
+    !item.requiresAuth || (item.requiresAuth && isAuthenticated)
+  );
   
   // Check if a link is active
   const isActive = (href: string) => {
@@ -57,13 +62,15 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         <div className="flex h-16 items-center border-b border-border px-4">
           <div className="flex items-center space-x-2">
             <div className="h-8 w-8 rounded bg-primary"></div>
-            <div className="text-sm font-medium">Your Organization</div>
+            <div className="text-sm font-medium">
+              {isLoading ? 'Loading...' : orgName}
+            </div>
           </div>
         </div>
         
         {/* Navigation */}
         <nav className="flex flex-col space-y-1 p-4">
-          {navigation.map((item) => (
+          {filteredNavigation.map((item) => (
             <Link
               key={item.name}
               href={item.href}
@@ -78,19 +85,6 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             </Link>
           ))}
         </nav>
-        
-        {/* User Info */}
-        <div className="mt-auto border-t border-border p-4">
-          <div className="flex items-center">
-            <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-              <span className="text-xs font-medium">JD</span>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium">John Doe</p>
-              <p className="text-xs text-muted-foreground">john.doe@example.com</p>
-            </div>
-          </div>
-        </div>
       </aside>
     </>
   );

@@ -38,11 +38,11 @@ export function UserProfileDropdown() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-2 rounded-full p-1 hover:bg-accent transition-colors">
+        <button className="flex h-10 items-center gap-2 rounded-full hover:bg-accent/50 transition-colors">
           <Avatar className="h-8 w-8">
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
-          <span className="text-sm font-medium hidden md:block">
+          <span className="text-sm font-medium hidden md:block pr-2">
             {user.name || user.email}
           </span>
         </button>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { useUser, useUpdateUser, useDeleteUser, useResendInvitation } from '@/hooks/api/use-users';
 import { User, UpdateUserData } from '@/types/user';
 import { Button } from '@/components/ui/button';
@@ -28,7 +29,6 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,11 +40,15 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-export default function UserDetailPage({ params }: { params: { id: string } }) {
+export default function OrganizationUserDetailPage() {
+  const params = useParams();
   const router = useRouter();
+  const organizationId = params.id as string;
+  const userId = params.userId as string;
+  
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const { data, isLoading } = useUser(params.id);
+  const { data, isLoading } = useUser(userId);
   const { mutate: updateUser, isPending: isUpdating } = useUpdateUser();
   const { mutate: deleteUser, isPending: isDeleting } = useDeleteUser();
   const { mutate: resendInvite, isPending: isResending } = useResendInvitation();
@@ -52,7 +56,7 @@ export default function UserDetailPage({ params }: { params: { id: string } }) {
   const user = data?.data?.user;
   
   const handleBack = () => {
-    router.push('/users');
+    router.push(`/organizations/${organizationId}/users`);
   };
   
   const handleEdit = () => {
@@ -61,7 +65,7 @@ export default function UserDetailPage({ params }: { params: { id: string } }) {
   
   const handleSave = (formData: any) => {
     updateUser(
-      { id: params.id, data: formData },
+      { id: userId, data: formData },
       {
         onSuccess: () => {
           toast.success('User updated successfully');
@@ -79,10 +83,10 @@ export default function UserDetailPage({ params }: { params: { id: string } }) {
   };
   
   const handleDelete = () => {
-    deleteUser(params.id, {
+    deleteUser(userId, {
       onSuccess: () => {
         toast.success('User deleted successfully');
-        router.push('/users');
+        router.push(`/organizations/${organizationId}/users`);
       },
       onError: (error) => {
         toast.error(error.message || 'Failed to delete user');
@@ -91,7 +95,7 @@ export default function UserDetailPage({ params }: { params: { id: string } }) {
   };
   
   const handleResendInvite = () => {
-    resendInvite(params.id, {
+    resendInvite(userId, {
       onSuccess: () => {
         toast.success('Invitation resent successfully');
       },
@@ -103,7 +107,7 @@ export default function UserDetailPage({ params }: { params: { id: string } }) {
   
   if (isLoading) {
     return (
-      <div className="container py-6">
+      <div className="space-y-6">
         <div className="flex items-center space-x-4 mb-6">
           <Button variant="ghost" onClick={handleBack}>
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -117,7 +121,7 @@ export default function UserDetailPage({ params }: { params: { id: string } }) {
   
   if (!user) {
     return (
-      <div className="container py-6">
+      <div className="space-y-6">
         <div className="flex items-center space-x-4 mb-6">
           <Button variant="ghost" onClick={handleBack}>
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -140,7 +144,7 @@ export default function UserDetailPage({ params }: { params: { id: string } }) {
   const isPending = user.status === 'pending';
   
   return (
-    <div className="container py-6">
+    <div className="space-y-6">
       <div className="flex items-center space-x-4 mb-6">
         <Button variant="ghost" onClick={handleBack}>
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -232,7 +236,7 @@ export default function UserDetailPage({ params }: { params: { id: string } }) {
                           <h3 className="text-sm font-medium text-muted-foreground">Organization</h3>
                           <p className="flex items-center mt-1">
                             <Building className="h-4 w-4 mr-2" />
-                            {user.organizationId}
+                            {organizationId}
                           </p>
                         </div>
                       )}

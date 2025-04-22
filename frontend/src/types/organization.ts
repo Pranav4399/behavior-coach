@@ -9,6 +9,8 @@ export interface Organization {
   logoUrl: string;
   customTerminology: Record<string, string>;
   settings: OrganizationSettings;
+  description?: string;
+  website?: string;
   createdAt: string;
   updatedAt: string;
 }

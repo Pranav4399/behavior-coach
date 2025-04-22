@@ -33,12 +33,14 @@ export interface UserFilters {
   status?: "active" | "inactive" | "pending";
   page?: number;
   limit?: number;
+  organizationId?: string;
 }
 
 export interface InviteUserData {
   email: string;
   name?: string;
   role: string;
+  organizationId?: string;
 }
 
 export interface UpdateUserData {

@@ -51,6 +51,8 @@ function OrganizationSkeleton() {
 
 const organizationSchema = z.object({
   name: z.string().min(1, 'Organization name is required'),
+  description: z.string().optional(),
+  website: z.string().url('Must be a valid URL').optional().or(z.literal('')),
   settings: z.object({
     theme: z.enum(['light', 'dark']),
     enableNotifications: z.boolean(),
@@ -74,6 +76,8 @@ export default function OrganizationProfilePage() {
     resolver: zodResolver(organizationSchema),
     defaultValues: {
       name: '',
+      description: '',
+      website: '',
       settings: DEFAULT_ORGANIZATION_SETTINGS,
       customTerminology: {},
     },
@@ -83,6 +87,8 @@ export default function OrganizationProfilePage() {
     if (organization) {
       form.reset({
         name: organization.name,
+        description: organization.description || '',
+        website: organization.website || '',
         settings: {
           theme: organization.settings?.theme || DEFAULT_ORGANIZATION_SETTINGS.theme,
           enableNotifications: organization.settings?.enableNotifications ?? DEFAULT_ORGANIZATION_SETTINGS.enableNotifications,
@@ -185,6 +191,42 @@ export default function OrganizationProfilePage() {
                 )}
               />
 
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        readOnly={!isEditing}
+                        className={!isEditing ? 'bg-muted' : ''}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="website"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Website</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        readOnly={!isEditing}
+                        className={!isEditing ? 'bg-muted' : ''}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <div className="flex flex-wrap gap-2">
                 <Badge className={ORGANIZATION_TYPE_COLORS[organization.type]}>
                   {organization.type}
@@ -248,7 +290,7 @@ export default function OrganizationProfilePage() {
                   </FormItem>
                 )}
               />
-
+              
               <FormField
                 control={form.control}
                 name="settings.enableNotifications"
@@ -258,14 +300,14 @@ export default function OrganizationProfilePage() {
                       <div className="space-y-0.5">
                         <FormLabel>Notifications</FormLabel>
                         <div className="text-sm text-muted-foreground">
-                          Enable or disable notifications
+                          Enable or disable organization notifications
                         </div>
                       </div>
                       <FormControl>
                         <Switch
-                          disabled={!isEditing}
                           checked={field.value}
                           onCheckedChange={field.onChange}
+                          disabled={!isEditing}
                         />
                       </FormControl>
                     </div>
@@ -281,18 +323,22 @@ export default function OrganizationProfilePage() {
             <CardHeader>
               <CardTitle>Custom Terminology</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {Object.entries(form.watch('customTerminology') || {}).map(([key, value]) => (
+            <CardContent className="space-y-6">
+              <div className="text-sm text-muted-foreground mb-4">
+                Customize key terms used in the platform to match your organization's language.
+              </div>
+              
+              <div className="grid gap-4 sm:grid-cols-2">
                 <FormField
-                  key={key}
                   control={form.control}
-                  name={`customTerminology.${key}`}
+                  name="customTerminology.client"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{key}</FormLabel>
+                      <FormLabel>Client Term</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
+                          value={field.value || 'Client'}
                           readOnly={!isEditing}
                           className={!isEditing ? 'bg-muted' : ''}
                         />
@@ -301,12 +347,26 @@ export default function OrganizationProfilePage() {
                     </FormItem>
                   )}
                 />
-              ))}
-              {Object.keys(form.watch('customTerminology') || {}).length === 0 && (
-                <div className="text-sm text-muted-foreground">
-                  No custom terminology configured
-                </div>
-              )}
+                
+                <FormField
+                  control={form.control}
+                  name="customTerminology.coach"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Coach Term</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          value={field.value || 'Coach'}
+                          readOnly={!isEditing}
+                          className={!isEditing ? 'bg-muted' : ''}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </CardContent>
           </Card>
 

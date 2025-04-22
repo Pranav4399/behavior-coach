@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { UserService } from '../services/userService';
 import { AppError } from '../../../common/middleware/errorHandler';
+import { User } from '../models/User';
 
 const userService = new UserService();
 
@@ -52,8 +53,28 @@ export class UserController {
    */
   async getAllUsers(req: Request, res: Response, next: NextFunction) {
     try {
-      if (!req.user || !req.user.organizationId) {
+      // Get the organization ID from the query params or the authenticated user
+      const organizationId = (req.query.organizationId as string) || (req.user?.organizationId);
+      
+      // If no organization ID is available, return a 403 error
+      if (!organizationId) {
         return next(new AppError('Unauthorized: Organization access required', 403));
+      }
+
+      // If using an explicit organizationId parameter, ensure the user has permission
+      // or is requesting their own organization
+      if (req.query.organizationId && req.user?.organizationId !== req.query.organizationId) {
+        // Check if user has permissions to view other organizations' users
+        // For now, we're allowing access if the user is authenticated and requesting a specific organization
+        // More granular permissions can be added later if needed
+        const hasAdminAccess = req.user?.role === 'admin' || 
+                              req.user?.role === 'platform_admin' || 
+                              req.user?.permissions?.includes('admin:access') ||
+                              req.user?.permissions?.includes('user:view');
+        
+        if (!hasAdminAccess) {
+          return next(new AppError('Forbidden: You do not have permission to access this organization\'s users', 403));
+        }
       }
 
       const page = parseInt(req.query.page as string) || 1;
@@ -63,15 +84,21 @@ export class UserController {
       const status = req.query.status as 'active' | 'inactive' | 'pending';
 
       const result = await userService.getAllUsers(
-        req.user.organizationId,
+        organizationId,
         page,
         limit,
         { search, role, status }
       );
 
+      // Format response to match expected frontend format
       res.status(200).json({
         status: 'success',
-        data: result
+        data: {
+          users: result.users.map((user: User) => user.toSafeObject()),
+          total: result.pagination.totalCount,
+          page,
+          limit
+        }
       });
     } catch (error) {
       next(error);
@@ -105,12 +132,30 @@ export class UserController {
    */
   async getUserById(req: Request, res: Response, next: NextFunction) {
     try {
-      if (!req.user || !req.user.organizationId) {
+      // Get the organization ID from the query params or the authenticated user
+      const organizationId = (req.query.organizationId as string) || (req.user?.organizationId);
+      
+      // If no organization ID is available, return a 403 error
+      if (!organizationId) {
         return next(new AppError('Unauthorized: Organization access required', 403));
       }
 
+      // If using an explicit organizationId parameter, ensure the user has permission
+      // or is requesting their own organization
+      if (req.query.organizationId && req.user?.organizationId !== req.query.organizationId) {
+        // Check if user has permissions to view other organizations' users
+        const hasAdminAccess = req.user?.role === 'admin' || 
+                              req.user?.role === 'platform_admin' || 
+                              req.user?.permissions?.includes('admin:access') ||
+                              req.user?.permissions?.includes('user:view');
+        
+        if (!hasAdminAccess) {
+          return next(new AppError('Forbidden: You do not have permission to access this organization\'s users', 403));
+        }
+      }
+
       const userId = req.params.userId;
-      const user = await userService.getUserById(userId, req.user.organizationId);
+      const user = await userService.getUserById(userId, organizationId);
 
       res.status(200).json({
         status: 'success',
