@@ -26,7 +26,7 @@ module.exports = {
           500: '#8b5cf6',
           600: '#7c3aed',
           700: '#6d28d9',
-          800: '#5b21b6',  // Primary brand color
+          800: '#2A72DE',  // Primary brand color
           900: '#4c1d95',
           950: '#2e1065',
         },

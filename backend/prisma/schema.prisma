@@ -42,7 +42,6 @@ model User {
   email         String   @unique
   name          String?
   password      String
-  role          String   @default("user") // Default role
   status        String?  @default("active")
   lastLoginAt   DateTime? @map("last_login_at")
   createdAt     DateTime @default(now()) @map("created_at")
@@ -51,6 +50,10 @@ model User {
   // Relation to Organization
   organizationId String?       @map("organization_id")
   organization   Organization? @relation(fields: [organizationId], references: [id])
+  
+  // Relation to Role
+  roleId        String?       @map("role_id")
+  role          Role?         @relation(fields: [roleId], references: [id])
   
   // Relation to UserPreferences
   preferences    UserPreferences?
@@ -79,6 +82,8 @@ model Role {
   id              String       @id @default(uuid())
   name            String
   displayName     String       @map("display_name")
+  description     String?      @default("")
+  isDefault       Boolean      @default(false) @map("is_default")
   permissions     Json         // Stored as JSON array of permission strings
   createdAt       DateTime     @default(now()) @map("created_at")
   updatedAt       DateTime     @updatedAt @map("updated_at")
@@ -86,6 +91,9 @@ model Role {
   // Relation to Organization
   organizationId  String       @map("organization_id")
   organization    Organization @relation(fields: [organizationId], references: [id])
+
+  // Relation to Users
+  users          User[]
 
   @@map("roles")
 }

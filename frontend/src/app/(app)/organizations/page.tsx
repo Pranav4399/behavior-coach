@@ -4,12 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Building2, ExternalLink, Bell, Sun, Moon } from 'lucide-react';
-import { useOrganizations } from '@/hooks/api/use-organizations';
 import { CreateOrganizationDialog } from '@/components/organizations/create-organization-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import Image from 'next/image';
+import { useOrganizationsData } from '@/hooks/api/use-organizations-data';
+import { useAuth } from '@/hooks/useAuth';
+import { canCreateOrganization } from '@/lib/permissions';
 
 const subscriptionColors = {
   basic: 'bg-blue-100 text-blue-800',
@@ -41,14 +43,19 @@ function OrganizationSkeleton() {
 }
 
 export default function OrganizationsPage() {
-  const { data, isLoading, error } = useOrganizations();
-  const organizations = data?.data?.organizations;
+  const { organizations, isLoading, error, isSingleOrg } = useOrganizationsData();
+  const { user } = useAuth();
+  
+  // Check if the user has permission to create organizations
+  const canCreate = canCreateOrganization(user?.role);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Organizations</h1>
-        <CreateOrganizationDialog />
+        <h1 className="text-3xl font-bold">
+          {isSingleOrg ? 'My Organization' : 'All Organizations'}
+        </h1>
+        {canCreate && <CreateOrganizationDialog />}
       </div>
 
       {error && (
@@ -59,7 +66,7 @@ export default function OrganizationsPage() {
       
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {isLoading ? (
-          Array.from({ length: 6 }).map((_, i) => (
+          Array.from({ length: isSingleOrg ? 1 : 6 }).map((_, i) => (
             <OrganizationSkeleton key={i} />
           ))
         ) : organizations?.length === 0 ? (
@@ -70,9 +77,9 @@ export default function OrganizationsPage() {
               </div>
               <h3 className="mb-2 text-lg font-semibold">No Organizations</h3>
               <p className="mb-4 text-sm text-muted-foreground">
-                Get started by creating your first organization.
+                {canCreate ? 'Get started by creating your first organization.' : 'No organizations found.'}
               </p>
-              <CreateOrganizationDialog />
+              {canCreate && <CreateOrganizationDialog />}
             </Card>
           </div>
         ) : (

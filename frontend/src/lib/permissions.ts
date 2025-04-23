@@ -1,8 +1,18 @@
+// Define platform-wide roles
+export const ROLES = {
+  PLATFORM_ADMIN: 'platform_admin',
+  ORG_ADMIN: 'org_admin',
+  PROGRAM_MANAGER: 'program_manager',
+  TRAINING_MANAGER: 'training_manager',
+  CONTENT_SPECIALIST: 'content_specialist',
+  PUBLISHER: 'publisher',
+};
+
 // Permissions by resource and action
 export const PERMISSIONS = {
   // Organization related permissions
   ORGANIZATION: {
-    CREATE: 'organization:create',
+    CREATE: 'organization:create', // Permission to create new organizations
     VIEW: 'organization:view',
     EDIT: 'organization:edit',
     MANAGE_SETTINGS: 'organization:manage_settings',
@@ -117,12 +127,15 @@ export const ACTION_DISPLAY_NAMES = {
 
 // Predefined role permission sets
 export const ROLE_PERMISSIONS = {
+  // Platform admin has all permissions
+  [ROLES.PLATFORM_ADMIN]: ALL_PERMISSIONS,
+  
   // Organization admin has all permissions
-  ORG_ADMIN: ALL_PERMISSIONS,
+  [ROLES.ORG_ADMIN]: ALL_PERMISSIONS,
   
   // Client organization roles
   CLIENT: {
-    PROGRAM_MANAGER: [
+    [ROLES.PROGRAM_MANAGER]: [
       // Organization permissions
       PERMISSIONS.ORGANIZATION.VIEW,
       PERMISSIONS.ORGANIZATION.VIEW_USAGE,
@@ -146,7 +159,7 @@ export const ROLE_PERMISSIONS = {
       PERMISSIONS.REPORT.CREATE,
     ],
     
-    TRAINING_MANAGER: [
+    [ROLES.TRAINING_MANAGER]: [
       // Organization permissions
       PERMISSIONS.ORGANIZATION.VIEW,
       
@@ -166,7 +179,7 @@ export const ROLE_PERMISSIONS = {
       PERMISSIONS.REPORT.VIEW,
     ],
     
-    CONTENT_SPECIALIST: [
+    [ROLES.CONTENT_SPECIALIST]: [
       // Content permissions
       PERMISSIONS.CONTENT.VIEW,
       PERMISSIONS.CONTENT.CREATE,
@@ -177,7 +190,7 @@ export const ROLE_PERMISSIONS = {
   
   // Expert organization roles
   EXPERT: {
-    CONTENT_SPECIALIST: [
+    [ROLES.CONTENT_SPECIALIST]: [
       // Organization permissions
       PERMISSIONS.ORGANIZATION.VIEW,
       
@@ -194,7 +207,7 @@ export const ROLE_PERMISSIONS = {
       PERMISSIONS.JOURNEY.DELETE,
     ],
     
-    PUBLISHER: [
+    [ROLES.PUBLISHER]: [
       // Organization permissions
       PERMISSIONS.ORGANIZATION.VIEW,
       
@@ -207,4 +220,53 @@ export const ROLE_PERMISSIONS = {
       PERMISSIONS.MARKETPLACE.MANAGE_LISTINGS,
     ],
   },
-}; 
+};
+
+/**
+ * Check if a user has a specific permission
+ * @param userPermissions The user's permissions array
+ * @param permission The permission to check
+ * @returns boolean indicating if the user has the permission
+ */
+export function hasPermission(userPermissions: string[] | undefined, permission: string): boolean {
+  if (!userPermissions || !Array.isArray(userPermissions)) return false;
+  return userPermissions.includes(permission);
+}
+
+/**
+ * Check if a user is a platform admin
+ * @param userRole The user's role
+ * @returns boolean indicating if the user is a platform admin
+ */
+export function isPlatformAdmin(userRole: string | undefined): boolean {
+  return userRole === ROLES.PLATFORM_ADMIN;
+}
+
+/**
+ * Check if a user is an organization admin
+ * @param userRole The user's role
+ * @returns boolean indicating if the user is an organization admin
+ */
+export function isOrgAdmin(userRole: string | undefined): boolean {
+  return userRole === ROLES.ORG_ADMIN;
+}
+
+/**
+ * Check if user can view all organizations in the system
+ * @param userRole The user's role
+ * @returns boolean indicating if the user can view all organizations
+ */
+export function canViewAllOrganizations(userRole: string | undefined): boolean {
+  if (userRole === ROLES.PLATFORM_ADMIN) return true;
+  return false;
+}
+
+/**
+ * Check if user can create new organizations
+ * @param userRole The user's role
+ * @returns boolean indicating if the user can create new organizations
+ */
+export function canCreateOrganization(userRole: string | undefined): boolean {
+  if (userRole === ROLES.PLATFORM_ADMIN) return true;
+  return false;
+} 

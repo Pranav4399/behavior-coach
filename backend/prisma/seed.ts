@@ -1,6 +1,10 @@
 import { PrismaClient } from '../generated/prisma';
 import { hash } from 'bcryptjs';
-import { ALL_PERMISSIONS } from '../src/config/permissions';
+import { 
+  ALL_PERMISSIONS, 
+  PERMISSIONS, 
+  ROLE_PERMISSIONS 
+} from '../src/config/permissions';
 
 // Initialize Prisma Client
 const prisma = new PrismaClient();
@@ -68,83 +72,39 @@ async function main() {
 
     console.log('Created platform admin organization');
 
-    // Create users
-    const adminPassword = await hash('admin123', 10);
-    const userPassword = await hash('user123', 10);
-    const platformAdminPassword = await hash('superadmin', 10);
-
-    const adminUser = await prisma.user.create({
-      data: {
-        email: 'admin@example.com',
-        name: 'Admin User',
-        password: adminPassword,
-        role: 'admin',
-        organizationId: clientOrg.id
-      }
-    });
-
-    const regularUser = await prisma.user.create({
-      data: {
-        email: 'user@example.com',
-        name: 'Regular User',
-        password: userPassword,
-        role: 'user',
-        organizationId: clientOrg.id
-      }
-    });
-
-    const expertUser = await prisma.user.create({
-      data: {
-        email: 'expert@consulting.com',
-        name: 'Expert User',
-        password: userPassword,
-        role: 'expert',
-        organizationId: expertOrg.id
-      }
-    });
-
-    // Create a platform admin user with all permissions
-    const platformAdminUser = await prisma.user.create({
-      data: {
-        email: 'superadmin@behaviorcoach.com',
-        name: 'Platform Administrator',
-        password: platformAdminPassword,
-        role: 'platform_admin',
-        organizationId: platformOrg.id
-      }
-    });
-
-    console.log('Created users including platform admin');
-
-    // Create roles
+    // Create roles first since users need to reference them
+    // Admin role - all permissions for their organization
     const adminRole = await prisma.role.create({
       data: {
         name: 'admin',
         displayName: 'Administrator',
-        permissions: ['create:all', 'read:all', 'update:all', 'delete:all'],
+        permissions: ROLE_PERMISSIONS.ORG_ADMIN,
         organizationId: clientOrg.id
       }
     });
 
+    // Standard user role - limited permissions
     const userRole = await prisma.role.create({
       data: {
         name: 'user',
         displayName: 'Standard User',
-        permissions: ['read:own', 'update:own'],
-        organizationId: clientOrg.id
+        permissions: [PERMISSIONS.ORGANIZATION.VIEW, PERMISSIONS.PROGRAM.VIEW, PERMISSIONS.JOURNEY.VIEW],
+        organizationId: clientOrg.id,
+        isDefault: true // Set as default role for new users
       }
     });
 
-    const expertRole = await prisma.role.create({
+    // Content specialist role (previously consultant)
+    const contentSpecialistRole = await prisma.role.create({
       data: {
-        name: 'consultant',
-        displayName: 'Consultant',
-        permissions: ['read:all', 'create:reports', 'update:reports'],
+        name: 'content_specialist',
+        displayName: 'Content Specialist',
+        permissions: ROLE_PERMISSIONS.EXPERT.CONTENT_SPECIALIST,
         organizationId: expertOrg.id
       }
     });
 
-    // Create a platform admin role with all permissions
+    // Platform admin role with all permissions across all organizations
     const platformAdminRole = await prisma.role.create({
       data: {
         name: 'platform_admin',
@@ -155,6 +115,54 @@ async function main() {
     });
 
     console.log('Created roles including platform admin role');
+
+    // Create users
+    const adminPassword = await hash('admin123', 10);
+    const userPassword = await hash('user123', 10);
+    const platformAdminPassword = await hash('superadmin', 10);
+
+    const adminUser = await prisma.user.create({
+      data: {
+        email: 'admin@example.com',
+        name: 'Admin User',
+        password: adminPassword,
+        roleId: adminRole.id,
+        organizationId: clientOrg.id
+      }
+    });
+
+    const regularUser = await prisma.user.create({
+      data: {
+        email: 'user@example.com',
+        name: 'Regular User',
+        password: userPassword,
+        roleId: userRole.id,
+        organizationId: clientOrg.id
+      }
+    });
+
+    const expertUser = await prisma.user.create({
+      data: {
+        email: 'expert@consulting.com',
+        name: 'Expert User',
+        password: userPassword,
+        roleId: contentSpecialistRole.id,
+        organizationId: expertOrg.id
+      }
+    });
+
+    // Create a platform admin user with all permissions
+    const platformAdminUser = await prisma.user.create({
+      data: {
+        email: 'superadmin@behaviorcoach.com',
+        name: 'Platform Administrator',
+        password: platformAdminPassword,
+        roleId: platformAdminRole.id,
+        organizationId: platformOrg.id
+      }
+    });
+
+    console.log('Created users including platform admin');
 
     // Create integrations
     const slackIntegration = await prisma.integration.create({
@@ -197,8 +205,8 @@ async function main() {
   }
 }
 
-// Don't auto-execute if imported as a module
-if (require.main === module) {
+// Run when executed directly
+if (typeof require !== 'undefined' && require.main === module) {
   main()
     .catch((e) => {
       console.error('Error seeding database:', e);
