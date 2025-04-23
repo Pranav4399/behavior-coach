@@ -5,7 +5,8 @@ export interface UserProps {
   email: string;
   password: string;
   name?: string | null;
-  role: string;
+  role?: string;
+  roleId?: string | null;
   organizationId?: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -17,6 +18,7 @@ export class User {
   password: string;
   name: string | null;
   role: string;
+  roleId: string | null;
   organizationId: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -26,7 +28,8 @@ export class User {
     this.email = props.email;
     this.password = props.password;
     this.name = props.name || null;
-    this.role = props.role;
+    this.role = props.role || 'user';
+    this.roleId = props.roleId || null;
     this.organizationId = props.organizationId || null;
     this.createdAt = props.createdAt;
     this.updatedAt = props.updatedAt;
@@ -65,6 +68,7 @@ export class User {
       email: this.email,
       name: this.name,
       role: this.role,
+      roleId: this.roleId,
       organizationId: this.organizationId,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt

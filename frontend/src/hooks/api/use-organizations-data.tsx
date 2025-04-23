@@ -1,7 +1,6 @@
 import { useAuth } from '@/hooks/useAuth';
 import { useOrganization, useOrganizations } from '@/hooks/api/use-organizations';
-import { canViewAllOrganizations } from '@/lib/permissions';
-
+import { usePlatformAdmin } from '@/lib/permission';
 /**
  * Custom hook that fetches organizations data based on user role and permissions
  * - For platform admins: fetches all organizations
@@ -10,10 +9,9 @@ import { canViewAllOrganizations } from '@/lib/permissions';
 export function useOrganizationsData() {
   const { user } = useAuth();
   const organizationId = user?.organizationId;
-  const userRole = user?.role;
   
   // Determine if the user can view all organizations
-  const canViewAll = canViewAllOrganizations(userRole);
+  const canViewAll = usePlatformAdmin();
   
   // For platform admins, fetch all organizations
   const allOrgsQuery = useOrganizations();

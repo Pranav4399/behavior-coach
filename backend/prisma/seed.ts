@@ -2,8 +2,8 @@ import { PrismaClient } from '../generated/prisma';
 import { hash } from 'bcryptjs';
 import { 
   ALL_PERMISSIONS, 
-  PERMISSIONS, 
-  ROLE_PERMISSIONS 
+  IS_PLATFORM_ADMIN, 
+  PERMISSIONS
 } from '../src/config/permissions';
 
 // Initialize Prisma Client
@@ -78,7 +78,7 @@ async function main() {
       data: {
         name: 'admin',
         displayName: 'Administrator',
-        permissions: ROLE_PERMISSIONS.ORG_ADMIN,
+        permissions: ALL_PERMISSIONS,
         organizationId: clientOrg.id
       }
     });
@@ -99,7 +99,12 @@ async function main() {
       data: {
         name: 'content_specialist',
         displayName: 'Content Specialist',
-        permissions: ROLE_PERMISSIONS.EXPERT.CONTENT_SPECIALIST,
+        permissions: [
+          PERMISSIONS.CONTENT.VIEW,
+          PERMISSIONS.CONTENT.CREATE,
+          PERMISSIONS.CONTENT.EDIT,
+          PERMISSIONS.CONTENT.DELETE,
+        ],
         organizationId: expertOrg.id
       }
     });
@@ -109,7 +114,7 @@ async function main() {
       data: {
         name: 'platform_admin',
         displayName: 'Platform Administrator',
-        permissions: ALL_PERMISSIONS,
+        permissions: [...ALL_PERMISSIONS, IS_PLATFORM_ADMIN],
         organizationId: platformOrg.id
       }
     });
@@ -126,8 +131,8 @@ async function main() {
         email: 'admin@example.com',
         name: 'Admin User',
         password: adminPassword,
-        roleId: adminRole.id,
-        organizationId: clientOrg.id
+        organizationId: clientOrg.id,
+        roleId: adminRole.id
       }
     });
 
@@ -136,8 +141,8 @@ async function main() {
         email: 'user@example.com',
         name: 'Regular User',
         password: userPassword,
-        roleId: userRole.id,
-        organizationId: clientOrg.id
+        organizationId: clientOrg.id,
+        roleId: userRole.id
       }
     });
 
@@ -146,8 +151,8 @@ async function main() {
         email: 'expert@consulting.com',
         name: 'Expert User',
         password: userPassword,
-        roleId: contentSpecialistRole.id,
-        organizationId: expertOrg.id
+        organizationId: expertOrg.id,
+        roleId: contentSpecialistRole.id
       }
     });
 
@@ -157,8 +162,8 @@ async function main() {
         email: 'superadmin@behaviorcoach.com',
         name: 'Platform Administrator',
         password: platformAdminPassword,
-        roleId: platformAdminRole.id,
-        organizationId: platformOrg.id
+        organizationId: platformOrg.id,
+        roleId: platformAdminRole.id
       }
     });
 

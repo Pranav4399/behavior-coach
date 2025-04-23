@@ -20,9 +20,11 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from '@/components/ui/toast/index';
 import { Skeleton } from '@/components/ui/skeleton';
+import { usePlatformAdmin } from '@/lib/permission';
 
 export default function RoleList() {
-  const { data, isLoading, error } = useAdminRoles();
+  const isPlatformAdmin = usePlatformAdmin();
+  const { data, isLoading, error } = isPlatformAdmin ? useAdminRoles() : useRoles();
   const { mutate: deleteRole, isPending: isDeleting } = useDeleteRole();
   
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -50,7 +52,10 @@ export default function RoleList() {
   const confirmDelete = () => {
     if (!roleToDelete) return;
     
-    deleteRole(roleToDelete.id, {
+    deleteRole({ 
+      id: roleToDelete.id,
+      organizationId: isPlatformAdmin ? roleToDelete.organizationId : undefined
+    }, {
       onSuccess: () => {
         toast({
           title: 'Role deleted',

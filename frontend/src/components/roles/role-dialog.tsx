@@ -10,10 +10,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCreateRole, useUpdateRole } from '@/hooks/api/use-roles';
+import { useOrganizations } from '@/hooks/api/use-organizations';
+import { useOrganization } from '@/hooks/api/use-organizations';
 import { Role } from '@/types/roles';
-import { PERMISSIONS, RESOURCE_DISPLAY_NAMES, ACTION_DISPLAY_NAMES } from '@/lib/permissions';
+import { PERMISSIONS, RESOURCE_DISPLAY_NAMES, ACTION_DISPLAY_NAMES } from '@/constants/permissions';
 import { toast } from '@/components/ui/toast/index';
+import { useAuth } from '@/hooks/useAuth';
+import { usePlatformAdmin } from '@/lib/permission';
 
 const RoleSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -21,6 +26,7 @@ const RoleSchema = z.object({
   description: z.string().optional(),
   permissions: z.array(z.string()).min(1, 'At least one permission must be selected'),
   isDefault: z.boolean().optional(),
+  organizationId: z.string().min(1, 'Organization is required'),
 });
 
 type RoleFormValues = z.infer<typeof RoleSchema>;
@@ -74,6 +80,16 @@ export default function RoleDialog({ open, onOpenChange, role }: RoleDialogProps
   const { mutate: createRole, isPending: isCreating } = useCreateRole();
   const { mutate: updateRole, isPending: isUpdating } = useUpdateRole();
   const isPending = isCreating || isUpdating;
+  const { user } = useAuth();
+  const isPlatformAdmin = usePlatformAdmin();
+
+  const { data: orgsData, isLoading: isLoadingOrgs } =
+    isPlatformAdmin
+      ? useOrganizations()
+      : useOrganization(user?.organizationId || "");
+
+  
+  const organizations = orgsData?.data?.organizations || [];
   
   const form = useForm<RoleFormValues>({
     resolver: zodResolver(RoleSchema),
@@ -83,19 +99,20 @@ export default function RoleDialog({ open, onOpenChange, role }: RoleDialogProps
       description: '',
       permissions: [],
       isDefault: false,
+      organizationId: user?.organizationId || '',
     },
   });
   
   // Reset form when dialog opens/closes or role changes
   useEffect(() => {
     if (open && role) {
-      console.log('Loading role with permissions:', role.permissions);
       form.reset({
         name: role.name || '',
         displayName: role.displayName || '',
         description: role.description || '',
         permissions: role.permissions || [],
         isDefault: role.isDefault || false,
+        organizationId: role.organizationId || user?.organizationId || '',
       });
     } else if (open) {
       form.reset({
@@ -104,9 +121,10 @@ export default function RoleDialog({ open, onOpenChange, role }: RoleDialogProps
         description: '',
         permissions: [],
         isDefault: false,
+        organizationId: user?.organizationId || '',
       });
     }
-  }, [form, open, role]);
+  }, [form, open, role, user?.organizationId]);
   
   // For debugging - log the current permissions
   useEffect(() => {
@@ -122,7 +140,11 @@ export default function RoleDialog({ open, onOpenChange, role }: RoleDialogProps
       updateRole(
         {
           id: role.id,
-          data: values,
+          data: {
+            ...values,
+            // Only include organizationId if platform admin
+            ...(isPlatformAdmin && { organizationId: values.organizationId }),
+          },
         },
         {
           onSuccess: () => {
@@ -145,7 +167,11 @@ export default function RoleDialog({ open, onOpenChange, role }: RoleDialogProps
     } else {
       // Create new role
       createRole(
-        values,
+        {
+          ...values,
+          // Only include organizationId if platform admin
+          ...(isPlatformAdmin && { organizationId: values.organizationId }),
+        },
         {
           onSuccess: () => {
             toast({
@@ -208,6 +234,44 @@ export default function RoleDialog({ open, onOpenChange, role }: RoleDialogProps
                 className="resize-none"
                 {...form.register('description')}
               />
+            </div>
+
+             {/* Organization Selection (only for platform admins or display only for org admins) */}
+             <div className="space-y-2">
+              <Label htmlFor="organizationId">Organization</Label>
+              {isPlatformAdmin ? (
+                <Select
+                  disabled={isLoadingOrgs}
+                  value={form.watch('organizationId')}
+                  onValueChange={(value) => {
+                    form.setValue('organizationId', value, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    });
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select an organization" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {organizations.map((org) => (
+                      <SelectItem key={org.id} value={org.id}>
+                        {org.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  disabled
+                  value={isLoadingOrgs 
+                    ? 'Loading...' 
+                    : orgsData?.data?.organization?.name || user?.organizationId || ''}
+                />
+              )}
+              {form.formState.errors.organizationId && (
+                <p className="text-sm text-destructive">{form.formState.errors.organizationId.message}</p>
+              )}
             </div>
             
             <div className="flex items-center space-x-2">

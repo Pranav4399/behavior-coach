@@ -1,17 +1,18 @@
+
 export const IS_PLATFORM_ADMIN = "is_platform_admin";
 
 // Permissions by resource and action
 export const PERMISSIONS = {
   // Organization related permissions
   ORGANIZATION: {
-    CREATE: 'organization:create',
-    VIEW: 'organization:view',
-    EDIT: 'organization:edit',
-    DELETE: 'organization:delete',
-    MANAGE_SETTINGS: 'organization:manage_settings',
-    VIEW_USAGE: 'organization:view_usage',
-    VIEW_BILLING: 'organization:view_billing',
-    MANAGE_BILLING: 'organization:manage_billing',
+    CREATE: 'organization:create', // Permission to create new organizations
+    VIEW: 'organization:view', // Permission to view organizations
+    EDIT: 'organization:edit', // Permission to edit organizations
+    DELETE: 'organization:delete', // Permission to delete organizations
+    MANAGE_SETTINGS: 'organization:manage_settings', // Permission to manage organization settings
+    VIEW_USAGE: 'organization:view_usage', // Permission to view organization usage
+    VIEW_BILLING: 'organization:view_billing', // Permission to view organization billing
+    MANAGE_BILLING: 'organization:manage_billing', // Permission to manage organization billing
     VIEW_BRANDING: 'organization:view_branding',
     MANAGE_BRANDING: 'organization:manage_branding',
   },

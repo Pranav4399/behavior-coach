@@ -286,7 +286,7 @@ export const userRepository = {
       id: user.id,
       email: user.email,
       name: user.name,
-      role: user.role,
+      roleId: user.roleId,
       organizationId: user.organizationId,
       preferences: user.preferences || {
         notifications: {

@@ -6,12 +6,13 @@ import { useRouter } from 'next/navigation';
 import * as authApi from '../lib/api/auth';
 import { LoadingOverlay } from '@/components/auth/loading-overlay';
 import { withMinDuration } from '@/hooks/useLoading';
+import { usePermissionsStore } from '@/store/permissions';
 
 interface User {
   id: string;
   email: string;
   name?: string;
-  role: string;
+  roleId?: string;
   organizationId?: string;
 }
 
@@ -34,6 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [loadingMessage, setLoadingMessage] = useState('Checking authentication...');
   const [error, setError] = useState<string | null>(null);
+  const { fetchPermissions, clearPermissions } = usePermissionsStore();
 
   const checkAuth = async () => {
     try {
@@ -43,6 +45,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (token && userData) {
         setUser(JSON.parse(userData));
+        // Fetch permissions if we have a token
+        await fetchPermissions();
       }
     } catch (err) {
       console.error('Error checking auth:', err);
@@ -68,6 +72,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('user', JSON.stringify(response.data.user));
       
       setUser(response.data.user);
+      
+      // Fetch user permissions
+      setLoadingMessage('Loading your permissions...');
+      await fetchPermissions();
 
       // Check for redirect URL
       const redirectUrl = localStorage.getItem('redirectAfterLogin');
@@ -85,7 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [router]);
+  }, [router, fetchPermissions]);
 
   const logout = useCallback(async () => {
     try {
@@ -99,6 +107,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           setUser(null);
+          // Clear permissions
+          clearPermissions();
         })()
       );
       
@@ -109,7 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [router]);
+  }, [router, clearPermissions]);
 
   useEffect(() => {
     checkAuth();
@@ -140,4 +150,4 @@ export function useAuth() {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-} 
+}

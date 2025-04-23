@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '@/config';
+import { apiClient } from './client';
 
 interface LoginResponse {
   status: string;
@@ -7,7 +8,7 @@ interface LoginResponse {
       id: string;
       email: string;
       name?: string;
-      role: string;
+      roleId?: string;
       organizationId?: string;
     };
     token: string;
@@ -17,6 +18,13 @@ interface LoginResponse {
 interface LoginCredentials {
   email: string;
   password: string;
+}
+
+interface PermissionsResponse {
+  status: string;
+  data: {
+    permissions: string[];
+  };
 }
 
 export async function login(credentials: LoginCredentials): Promise<LoginResponse> {
@@ -34,4 +42,18 @@ export async function login(credentials: LoginCredentials): Promise<LoginRespons
   }
 
   return response.json();
+}
+
+/**
+ * Fetches the current user's permissions from the server
+ * @returns Promise resolving to the user's permissions array
+ */
+export async function getUserPermissions(): Promise<string[]> {
+  try {
+    const response = await apiClient<PermissionsResponse>('/auth/permissions');
+    return response.data.permissions;
+  } catch (error) {
+    console.error('Error fetching user permissions:', error);
+    return [];
+  }
 } 

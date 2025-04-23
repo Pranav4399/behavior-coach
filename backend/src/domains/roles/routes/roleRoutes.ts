@@ -8,6 +8,9 @@ import {
   getAllRolesAdmin
 } from '../controllers/roleController';
 import { authMiddleware as authenticate } from '../../auth/middleware/authMiddleware';
+import { PERMISSIONS } from '../../../config/permissions';
+import { authorize } from '../../auth/middleware/authMiddleware';
+import { ALL_PERMISSIONS } from '../../../config/permissions';
 
 const router = Router();
 
@@ -85,7 +88,7 @@ const router = Router();
  *                       items:
  *                         $ref: '#/components/schemas/Role'
  */
-router.get('/', authenticate, getAllRoles);
+router.get('/', authenticate, authorize([PERMISSIONS.ROLE.VIEW]), getAllRoles);
 
 /**
  * @swagger
@@ -120,7 +123,7 @@ router.get('/', authenticate, getAllRoles);
  *       404:
  *         description: Role not found
  */
-router.get('/:id', authenticate, getRoleById);
+router.get('/:id', authenticate, authorize([PERMISSIONS.ROLE.VIEW]), getRoleById);
 
 /**
  * @swagger
@@ -168,7 +171,7 @@ router.get('/:id', authenticate, getRoleById);
  *       400:
  *         description: Invalid input
  */
-router.post('/', authenticate, createRole);
+router.post('/', authenticate, authorize([PERMISSIONS.ROLE.CREATE]), createRole);
 
 /**
  * @swagger
@@ -222,7 +225,7 @@ router.post('/', authenticate, createRole);
  *       404:
  *         description: Role not found
  */
-router.patch('/:id', authenticate, updateRole);
+router.patch('/:id', authenticate, authorize([PERMISSIONS.ROLE.EDIT]), updateRole);
 
 /**
  * @swagger
@@ -256,7 +259,7 @@ router.patch('/:id', authenticate, updateRole);
  *       404:
  *         description: Role not found
  */
-router.delete('/:id', authenticate, deleteRole);
+router.delete('/:id', authenticate, authorize([PERMISSIONS.ROLE.DELETE]), deleteRole);
 
 /**
  * @swagger
@@ -287,6 +290,6 @@ router.delete('/:id', authenticate, deleteRole);
  *       403:
  *         description: Unauthorized - only platform admins can access this resource
  */
-router.get('/admin/all', authenticate, getAllRolesAdmin);
+router.get('/admin/all', authenticate, authorize(ALL_PERMISSIONS), getAllRolesAdmin);
 
 export default router; 

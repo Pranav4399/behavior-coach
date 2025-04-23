@@ -37,5 +37,6 @@ export function useOrganization(id: string) {
   return useQuery({
     queryKey: ['organizations', id],
     queryFn: () => apiClient<ApiResponse<OrganizationResponse>>(`/organizations/${id}`),
+    enabled: !!id, // Only run the query if ID is provided
   });
 } 

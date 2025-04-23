@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import * as roleService from '../services/roleService';
 import { AppError } from '../../../common/middleware/errorHandler';
+import { IS_PLATFORM_ADMIN } from '../../../config/permissions';
 
 /**
  * Get all roles for the current organization
@@ -69,14 +70,21 @@ export const createRole = async (
   next: NextFunction
 ) => {
   try {
-    const user = req.user as { organizationId: string };
-    if (!user || !user.organizationId) {
+    const user = req.user as { organizationId: string; permissions: string[] };
+    const isPlatformAdmin = user.permissions.includes(IS_PLATFORM_ADMIN);
+    
+    // Use organizationId from request body if platform admin, otherwise use user's organization
+    let targetOrgId = user.organizationId;
+    
+    if (isPlatformAdmin && req.body.organizationId) {
+      targetOrgId = req.body.organizationId;
+    } else if (!user.organizationId) {
       throw new AppError('Unauthorized: Missing organization ID', 401);
     }
     
     const { name, displayName, permissions, description, isDefault } = req.body;
     
-    const newRole = await roleService.createRole(user.organizationId, {
+    const newRole = await roleService.createRole(targetOrgId, {
       name,
       displayName,
       permissions,
@@ -105,8 +113,15 @@ export const updateRole = async (
   next: NextFunction
 ) => {
   try {
-    const user = req.user as { organizationId: string };
-    if (!user || !user.organizationId) {
+    const user = req.user as { organizationId: string; permissions: string[] };
+    const isPlatformAdmin = user.permissions.includes(IS_PLATFORM_ADMIN);
+    
+    // Use organizationId from request body if platform admin, otherwise use user's organization
+    let targetOrgId = user.organizationId;
+    
+    if (isPlatformAdmin && req.body.organizationId) {
+      targetOrgId = req.body.organizationId;
+    } else if (!user.organizationId) {
       throw new AppError('Unauthorized: Missing organization ID', 401);
     }
     
@@ -115,7 +130,7 @@ export const updateRole = async (
     
     const updatedRole = await roleService.updateRole(
       roleId,
-      user.organizationId,
+      targetOrgId,
       { 
         name, 
         displayName, 
@@ -146,14 +161,21 @@ export const deleteRole = async (
   next: NextFunction
 ) => {
   try {
-    const user = req.user as { organizationId: string };
-    if (!user || !user.organizationId) {
+    const user = req.user as { organizationId: string; permissions: string[] };
+    const isPlatformAdmin = user.permissions.includes(IS_PLATFORM_ADMIN);
+    
+    // Use organizationId from query params if platform admin, otherwise use user's organization
+    let targetOrgId = user.organizationId;
+    
+    if (isPlatformAdmin && req.query.organizationId) {
+      targetOrgId = req.query.organizationId as string;
+    } else if (!user.organizationId) {
       throw new AppError('Unauthorized: Missing organization ID', 401);
     }
     
     const roleId = req.params.id;
     
-    await roleService.deleteRole(roleId, user.organizationId);
+    await roleService.deleteRole(roleId, targetOrgId);
     
     res.status(200).json({
       status: 'success',
@@ -179,12 +201,8 @@ export const getAllRolesAdmin = async (
   res: Response,
   next: NextFunction
 ) => {
+
   try {
-    // Check if user is platform admin
-    if (req.user?.role !== 'platform_admin') {
-      throw new AppError('Unauthorized: Only platform admins can access this resource', 403);
-    }
-    
     const roles = await roleService.getAllRolesAdmin();
     
     res.status(200).json({

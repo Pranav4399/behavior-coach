@@ -68,7 +68,7 @@ export class AuthController {
             id: result.user.id,
             email: result.user.email,
             name: result.user.name,
-            role: result.user.role,
+            roleId: result.user.roleId,
             organizationId: result.user.organizationId
           },
           token: result.token
@@ -131,7 +131,7 @@ export class AuthController {
             id: result.user.id,
             email: result.user.email,
             name: result.user.name,
-            role: result.user.role,
+            roleId: result.user.roleId,
             organizationId: result.user.organizationId
           },
           token: result.token
@@ -171,6 +171,39 @@ export class AuthController {
         status: 'success',
         data: {
           user
+        }
+      });
+    } catch (error: any) {
+      next(error);
+    }
+  }
+
+  /**
+   * @swagger
+   * /api/auth/permissions:
+   *   get:
+   *     summary: Get current user permissions
+   *     tags: [Auth]
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: User permissions
+   *       401:
+   *         description: Not authenticated
+   */
+  async getUserPermissions(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        return next(new AppError('You are not logged in', 401));
+      }
+
+      const permissions = await authService.getUserPermissions(req.user.id);
+
+      res.status(200).json({
+        status: 'success',
+        data: {
+          permissions
         }
       });
     } catch (error: any) {

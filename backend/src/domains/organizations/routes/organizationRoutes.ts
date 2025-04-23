@@ -6,7 +6,8 @@ import {
   updateOrganization, 
   deleteOrganization 
 } from '../controllers/organizationController';
-import { authMiddleware as authenticate } from '../../auth/middleware/authMiddleware';
+import { authMiddleware as authenticate, authorize } from '../../auth/middleware/authMiddleware';
+import { PERMISSIONS } from '../../../config/permissions';
 
 const router = Router();
 
@@ -88,7 +89,7 @@ const router = Router();
  *                       items:
  *                         $ref: '#/components/schemas/Organization'
  */
-router.get('/', authenticate, getAllOrganizations);
+router.get('/', authenticate, authorize([PERMISSIONS.ORGANIZATION.VIEW]), getAllOrganizations);
 
 /**
  * @swagger
@@ -123,7 +124,7 @@ router.get('/', authenticate, getAllOrganizations);
  *       404:
  *         description: Organization not found
  */
-router.get('/:id', authenticate, getOrganizationById);
+router.get('/:id', authenticate, authorize([PERMISSIONS.ORGANIZATION.VIEW]), getOrganizationById);
 
 /**
  * @swagger
@@ -167,7 +168,7 @@ router.get('/:id', authenticate, getOrganizationById);
  *       400:
  *         description: Invalid input
  */
-router.post('/', authenticate, createOrganization);
+router.post('/', authenticate, authorize([PERMISSIONS.ORGANIZATION.CREATE]), createOrganization);
 
 /**
  * @swagger
@@ -215,7 +216,7 @@ router.post('/', authenticate, createOrganization);
  *       404:
  *         description: Organization not found
  */
-router.put('/:id', authenticate, updateOrganization);
+router.put('/:id', authenticate, authorize([PERMISSIONS.ORGANIZATION.EDIT]), updateOrganization);
 
 /**
  * @swagger
@@ -237,6 +238,6 @@ router.put('/:id', authenticate, updateOrganization);
  *       404:
  *         description: Organization not found
  */
-router.delete('/:id', authenticate, deleteOrganization);
+router.delete('/:id', authenticate, authorize([PERMISSIONS.ORGANIZATION.DELETE]), deleteOrganization);
 
 export { router as organizationRoutes }; 

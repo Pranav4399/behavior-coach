@@ -11,7 +11,7 @@ import { formatDistanceToNow } from 'date-fns';
 import Image from 'next/image';
 import { useOrganizationsData } from '@/hooks/api/use-organizations-data';
 import { useAuth } from '@/hooks/useAuth';
-import { canCreateOrganization } from '@/lib/permissions';
+import { usePlatformAdmin } from '@/lib/permission';
 
 const subscriptionColors = {
   basic: 'bg-blue-100 text-blue-800',
@@ -47,7 +47,7 @@ export default function OrganizationsPage() {
   const { user } = useAuth();
   
   // Check if the user has permission to create organizations
-  const canCreate = canCreateOrganization(user?.role);
+  const canCreate = usePlatformAdmin();
 
   return (
     <div className="space-y-6">

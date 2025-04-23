@@ -14,7 +14,7 @@ interface AuthResult {
     id: string;
     email: string;
     name: string | null;
-    role: string;
+    roleId: string | null;
     organizationId: string | null;
   };
   token: string;

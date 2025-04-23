@@ -2,7 +2,7 @@ import express from 'express';
 import { UserController } from '../controllers/userController';
 import { authMiddleware } from '../../auth/middleware/authMiddleware';
 import { authorize } from '../../auth/middleware/authMiddleware';
-
+import { PERMISSIONS } from '../../../config/permissions';
 const router = express.Router();
 const userController = new UserController();
 
@@ -10,35 +10,35 @@ const userController = new UserController();
 router.get(
   '/',
   authMiddleware,
-  authorize(['user:view']),
+  authorize([PERMISSIONS.USER.VIEW]),
   userController.getAllUsers.bind(userController)
 );
 
 router.post(
   '/',
   authMiddleware,
-  authorize(['user:create']),
+  authorize([PERMISSIONS.USER.CREATE]),
   userController.inviteUser.bind(userController)
 );
 
 router.get(
   '/:userId',
   authMiddleware,
-  authorize(['user:view']),
+  authorize([PERMISSIONS.USER.VIEW]),
   userController.getUserById.bind(userController)
 );
 
 router.patch(
   '/:userId',
   authMiddleware,
-  authorize(['user:edit']),
+  authorize([PERMISSIONS.USER.EDIT]),
   userController.updateUser.bind(userController)
 );
 
 router.delete(
   '/:userId',
   authMiddleware,
-  authorize(['user:delete']),
+  authorize([PERMISSIONS.USER.DELETE]),
   userController.deleteUser.bind(userController)
 );
 
@@ -46,7 +46,7 @@ router.delete(
 router.post(
   '/:userId/resend-invite',
   authMiddleware,
-  authorize(['user:create']),
+  authorize([PERMISSIONS.USER.CREATE]),
   userController.resendInvitation.bind(userController)
 );
 

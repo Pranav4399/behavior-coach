@@ -138,14 +138,14 @@ export const getUserPermissions = async (userId: string): Promise<string[]> => {
     where: { id: userId }
   });
   
-  if (!user || !user.organizationId || !user.role) {
+  if (!user || !user.organizationId || !user.roleId) {
     return [];
   }
   
   const role = await prisma.role.findFirst({
     where: {
       organizationId: user.organizationId,
-      name: user.role
+      id: user.roleId
     }
   });
   

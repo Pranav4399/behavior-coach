@@ -16,6 +16,7 @@ export interface CreateRoleRequest {
   displayName: string;
   description?: string;
   permissions: string[];
+  organizationId?: string;
 }
 
 export interface UpdateRoleRequest {
@@ -23,6 +24,7 @@ export interface UpdateRoleRequest {
   displayName?: string;
   description?: string;
   permissions?: string[];
+  organizationId?: string;
 }
 
 export interface RolesResponse {

@@ -18,5 +18,6 @@ router.post('/login', authController.login);
 
 // Protected routes
 router.get('/me', authMiddleware, authController.getMe);
+router.get('/permissions', authMiddleware, authController.getUserPermissions);
 
 export const authRoutes = router; 

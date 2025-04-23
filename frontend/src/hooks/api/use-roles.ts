@@ -86,10 +86,16 @@ export function useDeleteRole() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (id: string) => 
-      apiClient<ApiResponse<void>>(`/roles/${id}`, {
+    mutationFn: ({ id, organizationId }: { id: string; organizationId?: string }) => {
+      // If organizationId is provided, include it as a query parameter
+      const url = organizationId
+        ? `/roles/${id}?organizationId=${organizationId}`
+        : `/roles/${id}`;
+
+      return apiClient<ApiResponse<void>>(url, {
         method: 'DELETE',
-      }),
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['roles'] });
       queryClient.invalidateQueries({ queryKey: ['admin', 'roles'] });

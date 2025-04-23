@@ -14,7 +14,7 @@ declare global {
         email: string;
         name?: string;
         organizationId?: string;
-        role: string;
+        roleId: string | null;
         permissions: string[];
       };
       organization?: {
@@ -66,7 +66,7 @@ export const authMiddleware = async (
         email: user.email,
         name: user.name || undefined,
         organizationId: user.organizationId || undefined,
-        role: user.role,
+        roleId: user.roleId,
         permissions,
       };
 
@@ -90,64 +90,11 @@ export const authMiddleware = async (
 };
 
 /**
- * Authentication middleware using x-user-id header (for testing/development)
- */
-export const authenticate = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    // For this example, we're using the x-user-id header
-    // In a real app, you would extract the user ID from a JWT token or session
-    const userId = req.headers['x-user-id'] as string;
-    
-    if (!userId) {
-      return next(new AppError('Authentication required', 401));
-    }
-    
-    try {
-      // Get user with organization
-      const { user, organization } = await authService.getUserWithOrganization(userId);
-      
-      // Get user permissions
-      const permissions = await authService.getUserPermissions(userId);
-      
-      // Add user to request
-      req.user = {
-        id: user.id,
-        email: user.email,
-        name: user.name || undefined,
-        organizationId: user.organizationId || undefined,
-        role: user.role,
-        permissions,
-      };
-      
-      // Add organization if user has one
-      if (organization) {
-        req.organization = {
-          id: organization.id,
-          name: organization.name,
-          type: organization.type,
-          subscriptionTier: organization.subscriptionTier,
-        };
-      }
-      
-      next();
-    } catch (error) {
-      return next(new AppError('User not found', 404));
-    }
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
  * Authorization middleware to check if the user has the required permissions
  * @param requiredPermissions - Array of permissions required for the route
  */
 export const authorize = (requiredPermissions: string[] = []) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Check if user exists on the request
       if (!req.user) {
@@ -158,15 +105,11 @@ export const authorize = (requiredPermissions: string[] = []) => {
       if (requiredPermissions.length === 0) {
         return next();
       }
-      
-      // Check if the user has the platform_admin role
-      if (req.user.role === 'platform_admin') {
-        return next(); // Platform admins have access to everything
-      }
-      
+
+      const permissions = await authService.getUserPermissions(req.user!.id);
       // Check if the user has all required permissions
       const hasAllPermissions = requiredPermissions.every(permission => 
-        req.user!.permissions.includes(permission)
+        permissions.includes(permission)
       );
       
       if (!hasAllPermissions) {
@@ -200,7 +143,7 @@ export const requireOrgAdmin = (
     }
     
     // Check if the user has the org_admin role or is a platform admin
-    if (req.user.role === 'org_admin' || req.user.role === 'platform_admin') {
+    if (req.user.roleId === 'org_admin' || req.user.roleId === 'platform_admin') {
       return next();
     }
     

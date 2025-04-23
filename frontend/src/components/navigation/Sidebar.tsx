@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { navigationItems, NavigationItem } from '@/config/navigation';
 import { useOrganization } from '@/hooks/api/use-organizations';
+import { useIsAdmin } from '@/lib/permission';
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -18,6 +19,7 @@ interface SidebarProps {
 export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { isAuthenticated, user } = useAuth();
+  const isAdmin = useIsAdmin();
   const [orgName, setOrgName] = useState('My Organization');
   
   // Fetch organization details if user is authenticated and has an organizationId
@@ -32,9 +34,10 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     }
   }, [orgData]);
   
-  // Filter navigation items based on authentication
+  // Filter navigation items based on authentication and admin status
   const filteredNavigation = navigationItems.filter(item => 
-    !item.requiresAuth || (item.requiresAuth && isAuthenticated)
+    (!item.requiresAuth || (item.requiresAuth && isAuthenticated)) &&
+    (!item.requiresAdmin || (item.requiresAdmin && isAdmin))
   );
   
   // Check if a link is active

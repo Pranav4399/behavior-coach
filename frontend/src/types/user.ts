@@ -6,7 +6,8 @@ export interface User {
   id: string;
   email: string;
   name?: string | null;
-  role: string;
+  role?: string;
+  roleId?: string | null;
   organizationId?: string | null;
   status?: "active" | "inactive" | "pending";
   createdAt: string;
