@@ -6,8 +6,9 @@ export interface User {
   id: string;
   email: string;
   name?: string | null;
-  role?: string;
+  roleDisplayName?: string;
   roleId?: string | null;
+  organizationName?: string | null;
   organizationId?: string | null;
   status?: "active" | "inactive" | "pending";
   createdAt: string;
@@ -40,7 +41,7 @@ export interface UserFilters {
 export interface InviteUserData {
   email: string;
   name?: string;
-  role: string;
+  roleId: string;
   organizationId?: string;
 }
 

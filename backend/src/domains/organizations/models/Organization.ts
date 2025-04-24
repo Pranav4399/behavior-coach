@@ -5,6 +5,8 @@ export type OrganizationType = 'client' | 'expert';
 interface OrganizationProps {
   id: string;
   name: string;
+  description?: string;
+  website?: string;
   type: OrganizationType;
   subscriptionTier: string;
   logoUrl?: string;
@@ -20,6 +22,8 @@ interface OrganizationProps {
 export class Organization {
   id: string;
   name: string;
+  description?: string;
+  website?: string;
   type: OrganizationType;
   subscriptionTier: string;
   logoUrl?: string;
@@ -33,6 +37,8 @@ export class Organization {
   constructor(props: OrganizationProps) {
     this.id = props.id;
     this.name = props.name;
+    this.description = props.description;
+    this.website = props.website;
     this.type = props.type;
     this.subscriptionTier = props.subscriptionTier;
     this.logoUrl = props.logoUrl;
@@ -71,6 +77,14 @@ export class Organization {
   update(props: Partial<Omit<OrganizationProps, 'id' | 'createdAt' | 'updatedAt'>>): void {
     if (props.name !== undefined) {
       this.name = props.name;
+    }
+    
+    if (props.description !== undefined) {
+      this.description = props.description;
+    }
+    
+    if (props.website !== undefined) {
+      this.website = props.website;
     }
     
     if (props.type !== undefined) {

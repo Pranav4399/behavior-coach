@@ -28,14 +28,33 @@ export const findById = async (id: string, organizationId?: string): Promise<Use
   }
   
   const user = await prisma.user.findUnique({
-    where: query
+    where: query,
+    include: {
+      organization: {
+        select: {
+          id: true,
+          name: true
+        }
+      },
+      role: {
+        select: {
+          id: true,
+          displayName: true
+        }
+      }
+    }
   });
   
   if (!user) {
     throw new AppError('User not found', 404);
   }
   
-  return new User(user);
+  return new User({
+    ...user,
+    roleId: user.roleId || '',
+    roleDisplayName: user.role?.displayName || '',
+    organizationName: user.organization?.name || ''
+  });
 };
 
 /**
@@ -50,14 +69,27 @@ export const findByEmail = async (email: string, organizationId?: string): Promi
   }
   
   const user = await prisma.user.findUnique({
-    where: query
+    where: query,
+    include: {
+      role: {
+        select: {
+          id: true,
+          displayName: true
+        }
+      }
+    }
   });
   
   if (!user) {
     return null;
   }
   
-  return new User(user);
+  return new User({
+    ...user,
+    roleId: user.roleId || '',
+    roleDisplayName: user.role?.displayName || '',
+    organizationName: user.organization?.name || ''
+  });
 };
 
 /**
@@ -69,7 +101,7 @@ export const findAll = async (
   limit = 20,
   filters: {
     search?: string;
-    role?: string;
+    roleId?: string;
     status?: 'active' | 'inactive' | 'pending';
   } = {}
 ) => {
@@ -85,8 +117,8 @@ export const findAll = async (
     ];
   }
   
-  if (filters.role) {
-    where.role = filters.role;
+  if (filters.roleId) {
+    where.roleId = filters.roleId;
   }
   
   if (filters.status) {
@@ -96,16 +128,41 @@ export const findAll = async (
   // Get total count for pagination
   const totalCount = await prisma.user.count({ where });
   
-  // Get users with pagination
+  // Get users with pagination and include the related role
   const users = await prisma.user.findMany({
     where,
     skip,
     take: limit,
-    orderBy: { createdAt: 'desc' }
+    orderBy: { createdAt: 'desc' },
+    include: {
+      role: {
+        select: {
+          id: true,
+          displayName: true
+        }
+      },
+      organization: {
+        select: {
+          id: true,
+          name: true
+        }
+      }
+    }
+  });
+  
+  // Map users to include role display name
+  const mappedUsers = users.map((user: any) => {
+    const userData = { 
+      ...user,
+      roleId: user.roleId || '',
+      roleDisplayName: user.role?.displayName || '',
+      organizationName: user.organization?.name || ''
+    };
+    return new User(userData);
   });
   
   return {
-    users: users.map((user: any) => new User(user)),
+    users: mappedUsers,
     pagination: {
       page,
       limit,
@@ -122,7 +179,7 @@ export const create = async (userData: {
   email: string;
   password?: string;
   name?: string;
-  role: string;
+  roleId: string;
   organizationId: string;
   status?: 'active' | 'inactive' | 'pending';
 }): Promise<User> => {
@@ -132,7 +189,7 @@ export const create = async (userData: {
     email: userData.email,
     password: userData.password,
     name: userData.name,
-    role: userData.role,
+    roleId: userData.roleId,
     organizationId: userData.organizationId,
     status: userData.status || 'pending',
     createdAt: new Date(),
@@ -157,6 +214,12 @@ export const create = async (userData: {
     const salt = await bcrypt.genSalt(10);
     hashedPassword = await bcrypt.hash(userData.password, salt);
   }
+  else {
+    const salt = await bcrypt.genSalt(10);
+    hashedPassword = await bcrypt.hash("abcd@1234", salt);
+  }
+  
+  console.log(userData.roleId, "see here");
   
   // Create user in database
   const user = await prisma.user.create({
@@ -164,8 +227,16 @@ export const create = async (userData: {
       email: userData.email,
       password: hashedPassword,
       name: userData.name || null,
-      role: userData.role,
-      organizationId: userData.organizationId,
+      role: {
+        connect: {
+          id: userData.roleId
+        }
+      },
+      organization: {
+        connect: {
+          id: userData.organizationId
+        }
+      },
       status: userData.status || 'pending'
     }
   });
@@ -191,10 +262,18 @@ export const update = async (
   let updateData: any = {
     email: existingUser.email,
     name: existingUser.name,
-    role: existingUser.role,
     status: existingUser.status,
     updatedAt: new Date()
   };
+  
+  // Update role if provided
+  if (data.roleId) {
+    updateData.role = {
+      connect: {
+        id: data.roleId
+      }
+    };
+  }
   
   // Only update password if provided
   if (data.password) {

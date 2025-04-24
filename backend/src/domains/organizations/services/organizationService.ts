@@ -1,5 +1,4 @@
 import { AppError } from '../../../common/middleware/errorHandler';
-import { createDefaultRoles } from '../../user/services/roleService';
 import * as organizationRepository from '../repositories/organizationRepository';
 import { OrganizationType } from '../models/Organization';
 
@@ -10,6 +9,8 @@ interface CreateOrganizationData {
   logoUrl?: string;
   customTerminology?: Record<string, string>;
   settings?: Record<string, any>;
+  description?: string;
+  website?: string;
 }
 
 /**
@@ -39,7 +40,7 @@ export const getOrganizationById = async (id: string) => {
  */
 export const createOrganization = async (data: CreateOrganizationData) => {
   try {
-    return await organizationRepository.createWithRoles(data, createDefaultRoles);
+    return await organizationRepository.create(data);
   } catch (error) {
     throw error;
   }
@@ -75,6 +76,8 @@ export const updateOrganization = async (
     logoUrl?: string;
     customTerminology?: Record<string, string>;
     settings?: Record<string, any>;
+    description?: string;
+    website?: string;
   }
 ) => {
   try {

@@ -133,14 +133,6 @@ export default function RoleDialog({ open, onOpenChange, role }: RoleDialogProps
     }
   }, [form, open, role, user?.organizationId]);
   
-  // For debugging - log the current permissions
-  useEffect(() => {
-    if (open && role) {
-      const currentPermissions = form.getValues('permissions');
-      console.log('Current form permissions:', currentPermissions);
-    }
-  }, [form, open, role]);
-  
   const onSubmit = (values: RoleFormValues) => {
     if (role) {
       // Update existing role

@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useOrganization } from '@/hooks/api/use-organizations';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,8 +21,9 @@ import { toast } from 'sonner';
 import { apiClient } from '@/lib/api/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Organization, OrganizationSettings } from '@/types/organization';
+import { Organization, OrganizationSettings, OrganizationResponse } from '@/types/organization';
 import { SUBSCRIPTION_COLORS, ORGANIZATION_TYPE_COLORS, DEFAULT_ORGANIZATION_SETTINGS } from '@/constants/organization';
+import { ApiResponse } from '@/types/common';
 
 type SubscriptionTier = 'basic' | 'premium' | 'enterprise';
 
@@ -71,6 +72,7 @@ export default function OrganizationProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const organization = data?.data?.organization as Organization | undefined;
+  const [customTermPairs, setCustomTermPairs] = useState<number[]>([]);
 
   const form = useForm<FormData>({
     resolver: zodResolver(organizationSchema),
@@ -98,17 +100,110 @@ export default function OrganizationProfilePage() {
     }
   }, [organization, form]);
 
+  useEffect(() => {
+    if (isEditing) {
+      setCustomTermPairs([0]);
+    } else {
+      setCustomTermPairs([]);
+    }
+  }, [isEditing]);
+
+  const addCustomTermPair = () => {
+    const nextIndex = Math.max(...customTermPairs, 0) + 1;
+    setCustomTermPairs([...customTermPairs, nextIndex]);
+  };
+
+  const removeCustomTermPair = (index: number) => {
+    setCustomTermPairs(customTermPairs.filter(i => i !== index));
+    
+    const currentTerminology = form.getValues().customTerminology;
+    delete currentTerminology[`key${index}`];
+    delete currentTerminology[`value${index}`];
+    form.setValue('customTerminology', currentTerminology);
+  };
+
   const onSubmit = async (formData: FormData) => {
     try {
-      await apiClient(`/organizations/${organizationId}`, {
-        method: 'PUT',
-        body: formData,
+      // Validate that no key-value pairs are incomplete
+      let hasIncompleteTerms = false;
+      
+      customTermPairs.forEach(index => {
+        const key = formData.customTerminology[`key${index}`];
+        const value = formData.customTerminology[`value${index}`];
+        
+        if ((key && !value) || (!key && value)) {
+          hasIncompleteTerms = true;
+        }
       });
+      
+      // Check existing terminology entries
+      Object.entries(formData.customTerminology)
+        .filter(([k]) => !k.startsWith('key') && !k.startsWith('value'))
+        .forEach(([_, value]) => {
+          if (!value || value.trim() === '') {
+            hasIncompleteTerms = true;
+          }
+        });
+      
+      if (hasIncompleteTerms) {
+        toast.error('Both original term and replacement term must be provided for all entries');
+        return;
+      }
+      
+      const customTerminology: Record<string, string> = {};
+      
+      // Process new term pairs
+      customTermPairs.forEach(index => {
+        const key = formData.customTerminology[`key${index}`];
+        const value = formData.customTerminology[`value${index}`];
+        
+        if (key && value && key.trim() !== '' && value.trim() !== '') {
+          customTerminology[key] = value as string;
+        }
+        
+        delete formData.customTerminology[`key${index}`];
+        delete formData.customTerminology[`value${index}`];
+      });
+      
+      // Process existing terminology that might be in the form
+      Object.entries(formData.customTerminology)
+        .filter(([k]) => !k.startsWith('key') && !k.startsWith('value') && !k.startsWith('original_'))
+        .forEach(([key, value]) => {
+          if (key && value && key.trim() !== '' && value.trim() !== '') {
+            customTerminology[key] = value as string;
+          }
+        });
+      
+      const submissionData = {
+        ...formData,
+        customTerminology
+      };
+
+      await apiClient<ApiResponse<OrganizationResponse>>(`/organizations/${organizationId}`, {
+        method: 'PUT',
+        body: submissionData,
+      });
+      
+      // Refresh the data from the server
       await queryClient.invalidateQueries({ queryKey: ['organizations', organizationId] });
+      
+      // Rather than manually updating the form, we'll fetch the latest data in the useEffect
       setIsEditing(false);
       toast.success('Organization updated successfully');
-    } catch (error) {
-      toast.error('Failed to update organization');
+    } catch (error: any) {
+      console.error('Failed to update organization:', error);
+      
+      const errorMessage = error?.response?.data?.message || error?.message;
+      
+      if (errorMessage && errorMessage.includes('already exists')) {
+        form.setError('name', {
+          type: 'manual',
+          message: 'An organization with this name already exists'
+        });
+        toast.error('An organization with this name already exists');
+      } else {
+        toast.error(errorMessage || 'Failed to update organization. Please try again.');
+      }
     }
   };
 
@@ -320,53 +415,152 @@ export default function OrganizationProfilePage() {
 
           {/* Custom Terminology */}
           <Card>
-            <CardHeader>
-              <CardTitle>Custom Terminology</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div>
+                <CardTitle>Custom Terminology</CardTitle>
+                <CardDescription>
+                  Define alternative terms used throughout the platform.
+                </CardDescription>
+              </div>
+              {isEditing && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addCustomTermPair}
+                >
+                  Add Term
+                </Button>
+              )}
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="text-sm text-muted-foreground mb-4">
-                Customize key terms used in the platform to match your organization's language.
-              </div>
+            <CardContent>
+              {!isEditing && 
+               Object.entries(organization.customTerminology || {})
+                .filter(([key]) => key !== 'term1' && key !== 'replacement1')
+                .length === 0 && (
+                <div className="text-center py-6 text-muted-foreground">
+                  <p>No custom terminology defined.</p>
+                  {!isEditing && (
+                    <p className="text-sm mt-2">Edit profile to add custom terms.</p>
+                  )}
+                </div>
+              )}
               
-              <div className="grid gap-4 sm:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="customTerminology.client"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Client Term</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          value={field.value || 'Client'}
-                          readOnly={!isEditing}
-                          className={!isEditing ? 'bg-muted' : ''}
+              {!isEditing && (
+                <div className="space-y-3">
+                  {Object.entries(organization.customTerminology || {})
+                    .filter(([key]) => key !== 'term1' && key !== 'replacement1')
+                    .map(([term, replacement]) => (
+                      <div key={term} className="flex items-center rounded-md border p-3">
+                        <div className="min-w-[120px] font-medium">{term}</div>
+                        <div className="mx-3 text-sm text-muted-foreground">→</div>
+                        <div>{replacement as string}</div>
+                      </div>
+                    ))}
+                </div>
+              )}
+              
+              {isEditing && (
+                <div className="space-y-3">
+                  {Object.entries(organization.customTerminology || {})
+                    .filter(([key]) => key !== 'term1' && key !== 'replacement1')
+                    .map(([term, replacement], idx) => (
+                      <div key={`existing-${idx}`} className="flex items-center gap-3">
+                        <div className="flex-1">
+                          <FormField
+                            control={form.control}
+                            name={`customTerminology.original_${idx}`}
+                            defaultValue={term}
+                            render={({ field }) => (
+                              <FormItem className="m-0">
+                                <FormControl>
+                                  <Input 
+                                    {...field} 
+                                    placeholder="Original term"
+                                    defaultValue={term}
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="flex-none text-muted-foreground">→</div>
+                        <div className="flex-1">
+                          <FormField
+                            control={form.control}
+                            name={`customTerminology.${term}`}
+                            render={({ field }) => (
+                              <FormItem className="m-0">
+                                <FormControl>
+                                  <Input {...field} placeholder="Replacement term" />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            const newTerminology = { ...form.getValues().customTerminology };
+                            delete newTerminology[term];
+                            delete newTerminology[`original_${idx}`];
+                            form.setValue('customTerminology', newTerminology);
+                          }}
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    ))}
+                  
+                  {customTermPairs.map((index) => (
+                    <div key={`new-${index}`} className="flex items-center gap-3">
+                      <div className="flex-1">
+                        <FormField
+                          control={form.control}
+                          name={`customTerminology.key${index}`}
+                          render={({ field }) => (
+                            <FormItem className="m-0">
+                              <FormControl>
+                                <Input 
+                                  {...field} 
+                                  placeholder="Original term" 
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
                         />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="customTerminology.coach"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Coach Term</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          value={field.value || 'Coach'}
-                          readOnly={!isEditing}
-                          className={!isEditing ? 'bg-muted' : ''}
+                      </div>
+                      <div className="flex-none text-muted-foreground">→</div>
+                      <div className="flex-1">
+                        <FormField
+                          control={form.control}
+                          name={`customTerminology.value${index}`}
+                          render={({ field }) => (
+                            <FormItem className="m-0">
+                              <FormControl>
+                                <Input 
+                                  {...field} 
+                                  placeholder="Replacement term" 
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
                         />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeCustomTermPair(index)}
+                      >
+                        ×
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 

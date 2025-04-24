@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { User } from '@/types/user';
+import { useRoles } from '@/hooks/api/use-roles';
 import {
   Form,
   FormControl,
@@ -21,11 +22,12 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
   name: z.string().optional(),
   email: z.string().email({ message: 'Please enter a valid email address' }),
-  role: z.string().min(1, { message: 'Please select a role' }),
+  roleId: z.string().min(1, { message: 'Please select a role' }),
   status: z.enum(['active', 'inactive', 'pending']),
 });
 
@@ -36,18 +38,23 @@ interface UserProfileFormProps {
   onSave: (data: FormValues) => void;
   onCancel: () => void;
   isPending: boolean;
+  organizationId?: string;
 }
 
-export function UserProfileForm({ user, onSave, onCancel, isPending }: UserProfileFormProps) {
+export function UserProfileForm({ user, onSave, onCancel, isPending, organizationId }: UserProfileFormProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: user.name || '',
       email: user.email,
-      role: user.role,
+      roleId: user.roleId || '',
       status: user.status || 'active',
     },
   });
+
+  const { data: rolesData, isLoading: isLoadingRoles } = useRoles(organizationId);
+
+  const roles = rolesData?.data?.roles || [];
 
   return (
     <Form {...form}>
@@ -72,7 +79,7 @@ export function UserProfileForm({ user, onSave, onCancel, isPending }: UserProfi
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder="john@example.com" {...field} />
+                <Input disabled={true} placeholder="john@example.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -80,23 +87,35 @@ export function UserProfileForm({ user, onSave, onCancel, isPending }: UserProfi
         />
         <FormField
           control={form.control}
-          name="role"
+          name="roleId"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Role</FormLabel>
               <Select 
                 onValueChange={field.onChange} 
                 defaultValue={field.value}
+                disabled={isLoadingRoles}
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a role" />
+                    <SelectValue placeholder={isLoadingRoles ? "Loading roles..." : "Select a role"} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="member">Member</SelectItem>
-                  <SelectItem value="viewer">Viewer</SelectItem>
+                  {isLoadingRoles ? (
+                    <div className="flex items-center justify-center py-2">
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      <span>Loading roles...</span>
+                    </div>
+                  ) : roles.length > 0 ? (
+                    roles.map((role) => (
+                      <SelectItem key={role.id} value={role.id}>
+                        {role.displayName || role.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="" disabled>No roles available</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -137,7 +156,7 @@ export function UserProfileForm({ user, onSave, onCancel, isPending }: UserProfi
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={isPending}>
+          <Button type="submit" disabled={isPending || isLoadingRoles}>
             {isPending ? 'Saving...' : 'Save Changes'}
           </Button>
         </div>

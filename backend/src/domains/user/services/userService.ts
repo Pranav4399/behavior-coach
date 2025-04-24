@@ -28,7 +28,7 @@ export class UserService {
     limit = 20,
     filters: {
       search?: string;
-      role?: string;
+      roleId?: string;
       status?: 'active' | 'inactive' | 'pending';
     } = {}
   ) {
@@ -58,7 +58,7 @@ export class UserService {
     email: string;
     password?: string;
     name?: string;
-    role: string;
+    roleId: string;
     organizationId: string;
     status?: 'active' | 'inactive' | 'pending';
   }) {
@@ -119,7 +119,7 @@ export class UserService {
   async inviteUser(userData: {
     email: string;
     name?: string;
-    role: string;
+    roleId: string;
     organizationId: string;
   }) {
     try {

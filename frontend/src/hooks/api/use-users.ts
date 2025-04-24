@@ -21,10 +21,19 @@ export function useUsers(filters?: UserFilters) {
 }
 
 // Get user by ID
-export function useUser(id: string) {
+export function useUser(id: string, organizationId?: string) {
   return useQuery({
-    queryKey: ['users', id],
-    queryFn: () => apiClient<ApiResponse<UserResponse>>(`/users/${id}`),
+    queryKey: ['users', id, organizationId],
+    queryFn: () => {
+      const params: Record<string, string> = {};
+      if (organizationId) {
+        params.organizationId = organizationId;
+      }
+      
+      return apiClient<ApiResponse<UserResponse>>(`/users/${id}`, {
+        params
+      });
+    },
     enabled: !!id,
   });
 }

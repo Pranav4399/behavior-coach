@@ -14,23 +14,24 @@ export const getAllRoles = async (
   next: NextFunction
 ) => {
   try {
-    const user = req.user as { organizationId: string };
-    if (!user || !user.organizationId) {
+    const { organizationId: userOrgId } = req.user as { organizationId: string };
+    const targetOrgId = (req.query.organizationId as string) ?? userOrgId;
+
+    if (!targetOrgId) {
       throw new AppError('Unauthorized: Missing organization ID', 401);
     }
-    
-    const roles = await roleService.getRoles(user.organizationId);
-    
+
+    const roles = await roleService.getRoles(targetOrgId);
+
     res.status(200).json({
       status: 'success',
-      data: {
-        roles
-      }
+      data: { roles },
     });
   } catch (error) {
     next(error);
   }
 };
+
 
 /**
  * Get a specific role by ID
@@ -42,13 +43,20 @@ export const getRoleById = async (
   next: NextFunction
 ) => {
   try {
-    const user = req.user as { organizationId: string };
-    if (!user || !user.organizationId) {
+    const user = req.user as { organizationId: string; permissions: string[] };
+    const isPlatformAdmin = user.permissions?.includes(IS_PLATFORM_ADMIN);
+    
+    // Use organizationId from query params if platform admin, otherwise use user's organization
+    let targetOrgId = user.organizationId;
+    
+    if (isPlatformAdmin && req.query.organizationId) {
+      targetOrgId = req.query.organizationId as string;
+    } else if (!user.organizationId) {
       throw new AppError('Unauthorized: Missing organization ID', 401);
     }
     
     const roleId = req.params.id;
-    const role = await roleService.getRole(roleId, user.organizationId);
+    const role = await roleService.getRole(roleId, targetOrgId);
     
     res.status(200).json({
       status: 'success',

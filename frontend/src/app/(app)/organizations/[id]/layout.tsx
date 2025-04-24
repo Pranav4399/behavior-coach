@@ -40,6 +40,12 @@ export default function OrganizationLayout({
     }
   };
 
+  // Prefetch the users page to minimize loading time when switching tabs
+  useEffect(() => {
+    // Prefetch the users route to ensure fast navigation
+    router.prefetch(`/organizations/${organizationId}/users`);
+  }, [organizationId, router]);
+
   return (
     <div className="space-y-8">
       <div className="border-b pb-5">

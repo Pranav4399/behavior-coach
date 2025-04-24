@@ -33,7 +33,7 @@ export class UserController {
    *           type: string
    *         description: Search term for name or email
    *       - in: query
-   *         name: role
+   *         name: roleId
    *         schema:
    *           type: string
    *         description: Filter by role
@@ -67,9 +67,7 @@ export class UserController {
         // Check if user has permissions to view other organizations' users
         // For now, we're allowing access if the user is authenticated and requesting a specific organization
         // More granular permissions can be added later if needed
-        const hasAdminAccess = req.user?.role === 'admin' || 
-                              req.user?.role === 'platform_admin' || 
-                              req.user?.permissions?.includes('admin:access') ||
+        const hasAdminAccess = req.user?.permissions?.includes('admin:access') ||
                               req.user?.permissions?.includes('user:view');
         
         if (!hasAdminAccess) {
@@ -80,14 +78,14 @@ export class UserController {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
       const search = req.query.search as string;
-      const role = req.query.role as string;
+      const roleId = req.query.roleId as string;
       const status = req.query.status as 'active' | 'inactive' | 'pending';
 
       const result = await userService.getAllUsers(
         organizationId,
         page,
         limit,
-        { search, role, status }
+        { search, roleId, status }
       );
 
       // Format response to match expected frontend format
@@ -132,29 +130,15 @@ export class UserController {
    */
   async getUserById(req: Request, res: Response, next: NextFunction) {
     try {
-      // Get the organization ID from the query params or the authenticated user
-      const organizationId = (req.query.organizationId as string) || (req.user?.organizationId);
-      
-      // If no organization ID is available, return a 403 error
-      if (!organizationId) {
-        return next(new AppError('Unauthorized: Organization access required', 403));
-      }
-
-      // If using an explicit organizationId parameter, ensure the user has permission
-      // or is requesting their own organization
-      if (req.query.organizationId && req.user?.organizationId !== req.query.organizationId) {
-        // Check if user has permissions to view other organizations' users
-        const hasAdminAccess = req.user?.role === 'admin' || 
-                              req.user?.role === 'platform_admin' || 
-                              req.user?.permissions?.includes('admin:access') ||
-                              req.user?.permissions?.includes('user:view');
-        
-        if (!hasAdminAccess) {
-          return next(new AppError('Forbidden: You do not have permission to access this organization\'s users', 403));
-        }
-      }
-
       const userId = req.params.userId;
+      
+      // Only use organizationId if explicitly provided in query parameters
+      let organizationId = undefined;
+      if (req.query.organizationId) {
+        organizationId = req.query.organizationId as string;   
+      }
+      
+      // Get user with or without organization filter
       const user = await userService.getUserById(userId, organizationId);
 
       res.status(200).json({
@@ -182,14 +166,14 @@ export class UserController {
    *             type: object
    *             required:
    *               - email
-   *               - role
+   *               - roleId
    *             properties:
    *               email:
    *                 type: string
    *                 format: email
    *               name:
    *                 type: string
-   *               role:
+   *               roleId:
    *                 type: string
    *     responses:
    *       201:
@@ -209,21 +193,21 @@ export class UserController {
         return next(new AppError('Unauthorized: Organization access required', 403));
       }
 
-      const { email, name, role } = req.body;
+      const { email, name, roleId, organizationId } = req.body;
 
       if (!email) {
         return next(new AppError('Email is required', 400));
       }
 
-      if (!role) {
-        return next(new AppError('Role is required', 400));
+      if (!roleId) {
+        return next(new AppError('Role ID is required', 400));
       }
 
       const user = await userService.inviteUser({
         email,
         name,
-        role,
-        organizationId: req.user.organizationId
+        roleId,
+        organizationId
       });
 
       res.status(201).json({
@@ -259,7 +243,7 @@ export class UserController {
    *             properties:
    *               name:
    *                 type: string
-   *               role:
+   *               roleId:
    *                 type: string
    *               status:
    *                 type: string
@@ -278,17 +262,16 @@ export class UserController {
    */
   async updateUser(req: Request, res: Response, next: NextFunction) {
     try {
-      if (!req.user || !req.user.organizationId) {
+      if (!req.body.organizationId) {
         return next(new AppError('Unauthorized: Organization access required', 403));
       }
 
       const userId = req.params.userId;
-      const { name, role, status } = req.body;
+      const { name, roleId, status, organizationId } = req.body;
 
       const user = await userService.updateUser(
         userId,
-        { name, role, status },
-        req.user.organizationId
+        { name, roleId, status, organizationId }
       );
 
       res.status(200).json({

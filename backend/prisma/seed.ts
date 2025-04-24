@@ -26,6 +26,8 @@ async function main() {
     const clientOrg = await prisma.organization.create({
       data: {
         name: 'Example Client',
+        description: 'A client organization example for demonstration purposes',
+        website: 'https://example-client.com',
         type: 'client',
         subscriptionTier: 'basic',
         logoUrl: 'https://via.placeholder.com/150',
@@ -43,6 +45,8 @@ async function main() {
     const expertOrg = await prisma.organization.create({
       data: {
         name: 'Consulting Experts',
+        description: 'Professional consulting firm specializing in behavioral coaching',
+        website: 'https://consulting-experts.com',
         type: 'expert',
         subscriptionTier: 'premium',
         logoUrl: 'https://via.placeholder.com/150',
@@ -59,6 +63,8 @@ async function main() {
     const platformOrg = await prisma.organization.create({
       data: {
         name: 'System Administrators',
+        description: 'Platform administration team with system-wide access',
+        website: 'https://behaviorcoach.com/admin',
         type: 'client', // Admin organization is technically a client type
         subscriptionTier: 'enterprise',
         logoUrl: 'https://via.placeholder.com/150',

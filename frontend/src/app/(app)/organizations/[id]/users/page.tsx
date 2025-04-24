@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useUsers } from '@/hooks/api/use-users';
 import { Button } from '@/components/ui/button';
@@ -45,11 +45,18 @@ export default function OrganizationUsersPage() {
     limit: 10,
   });
   const router = useRouter();
+  const [initialLoadingComplete, setInitialLoadingComplete] = useState(false);
   const { data, isLoading, refetch } = useUsers(filters);
   
   const users = data?.data?.users || [];
   const total = data?.data?.total || 0;
   const totalPages = Math.ceil(total / (filters.limit || 10));
+
+  useEffect(() => {
+    if (!isLoading && !initialLoadingComplete) {
+      setInitialLoadingComplete(true);
+    }
+  }, [isLoading, initialLoadingComplete]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,7 +146,7 @@ export default function OrganizationUsersPage() {
           </Select>
           
           <Button variant="outline" onClick={() => refetch()}>
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
           </Button>
         </div>
       </div>
@@ -158,11 +165,16 @@ export default function OrganizationUsersPage() {
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">
-                  Loading users...
-                </TableCell>
-              </TableRow>
+              Array(5).fill(0).map((_, index) => (
+                <TableRow key={`skeleton-${index}`}>
+                  <TableCell><div className="h-5 w-24 bg-gray-200 rounded animate-pulse"></div></TableCell>
+                  <TableCell><div className="h-5 w-32 bg-gray-200 rounded animate-pulse"></div></TableCell>
+                  <TableCell><div className="h-5 w-16 bg-gray-200 rounded animate-pulse"></div></TableCell>
+                  <TableCell><div className="h-5 w-16 bg-gray-200 rounded animate-pulse"></div></TableCell>
+                  <TableCell><div className="h-5 w-24 bg-gray-200 rounded animate-pulse"></div></TableCell>
+                  <TableCell className="text-right"><div className="h-5 w-10 bg-gray-200 rounded animate-pulse ml-auto"></div></TableCell>
+                </TableRow>
+              ))
             ) : users.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8">
@@ -181,7 +193,7 @@ export default function OrganizationUsersPage() {
                   </TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">{user.role}</Badge>
+                    <Badge variant="outline">{user.roleDisplayName}</Badge>
                   </TableCell>
                   <TableCell>
                     {getUserStatusBadge(user.status)}

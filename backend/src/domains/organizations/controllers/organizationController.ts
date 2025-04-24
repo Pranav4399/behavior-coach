@@ -60,7 +60,7 @@ export const createOrganization = async (
   next: NextFunction
 ) => {
   try {
-    const { name, type, subscriptionTier, logoUrl, customTerminology, settings } = req.body;
+    const { name, type, subscriptionTier, logoUrl, customTerminology, settings, description, website } = req.body;
     
     const newOrganization = await organizationService.createOrganization({
       name,
@@ -68,7 +68,9 @@ export const createOrganization = async (
       subscriptionTier,
       logoUrl,
       customTerminology,
-      settings
+      settings,
+      description,
+      website
     });
     
     res.status(201).json({
@@ -93,7 +95,7 @@ export const updateOrganization = async (
 ) => {
   try {
     const organizationId = req.params.id;
-    const { name, type, subscriptionTier, logoUrl, customTerminology, settings } = req.body;
+    const { name, type, subscriptionTier, logoUrl, customTerminology, settings, description, website } = req.body;
     
     const updatedOrganization = await organizationService.updateOrganization(
       organizationId,
@@ -103,7 +105,9 @@ export const updateOrganization = async (
         subscriptionTier,
         logoUrl,
         customTerminology,
-        settings
+        settings,
+        description,
+        website
       }
     );
     

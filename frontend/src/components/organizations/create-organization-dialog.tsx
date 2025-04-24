@@ -85,19 +85,37 @@ export function CreateOrganizationDialog() {
         customTerminology
       };
 
-      console.log('Submitting organization data:', submissionData);
-      const result = await createOrganization(submissionData);
-      console.log('Organization created successfully:', result);
-      
-      setOpen(false);
-      form.reset();
-      toast.success('Organization created successfully');
+      createOrganization(submissionData, {
+        onSuccess: () => {
+          setOpen(false);
+          form.reset();
+          toast.success('Organization created successfully');
+        },
+        onError: (error: any) => {
+          console.error('Failed to create organization:', error);
+          
+          // Check for specific error about duplicate organization name
+          const errorMessage = error?.response?.data?.message || error?.message;
+          
+          if (errorMessage && errorMessage.includes('already exists')) {
+            // Set the error on the name field specifically
+            form.setError('name', {
+              type: 'manual',
+              message: 'An organization with this name already exists'
+            });
+            toast.error('An organization with this name already exists');
+          } else {
+            // Generic error
+            toast.error(
+              errorMessage || 
+              'Failed to create organization. Please try again.'
+            );
+          }
+        }
+      });
     } catch (error) {
       console.error('Failed to create organization:', error);
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : 'Failed to create organization. Please try again.';
-      toast.error(errorMessage);
+      toast.error('An unexpected error occurred. Please try again.');
     }
   };
 

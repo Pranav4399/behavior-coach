@@ -39,6 +39,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { useIsAdmin } from '@/lib/permission';
 
 export default function OrganizationUserDetailPage() {
   const params = useParams();
@@ -48,12 +49,15 @@ export default function OrganizationUserDetailPage() {
   
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const { data, isLoading } = useUser(userId);
+  const { data, isLoading } = useUser(userId, organizationId);
   const { mutate: updateUser, isPending: isUpdating } = useUpdateUser();
   const { mutate: deleteUser, isPending: isDeleting } = useDeleteUser();
   const { mutate: resendInvite, isPending: isResending } = useResendInvitation();
+  const isAdmin = useIsAdmin();
   
   const user = data?.data?.user;
+
+  console.log(user, "user");
   
   const handleBack = () => {
     router.push(`/organizations/${organizationId}/users`);
@@ -65,7 +69,7 @@ export default function OrganizationUserDetailPage() {
   
   const handleSave = (formData: any) => {
     updateUser(
-      { id: userId, data: formData },
+      { id: userId, data: { ...formData, organizationId: organizationId } },
       {
         onSuccess: () => {
           toast.success('User updated successfully');
@@ -156,7 +160,6 @@ export default function OrganizationUserDetailPage() {
         <TabsList>
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
-          <TabsTrigger value="permissions">Permissions</TabsTrigger>
         </TabsList>
         
         <TabsContent value="profile" className="space-y-6">
@@ -188,12 +191,14 @@ export default function OrganizationUserDetailPage() {
                     {isResending ? 'Resending...' : 'Resend Invite'}
                   </Button>
                 )}
-                <Button 
-                  onClick={handleEdit} 
-                  disabled={isEditMode}
-                >
-                  Edit Profile
-                </Button>
+                {isAdmin && (
+                  <Button 
+                    onClick={handleEdit} 
+                    disabled={isEditMode}
+                  >
+                    Edit Profile
+                  </Button>
+                )}
               </div>
             </CardHeader>
             
@@ -204,6 +209,7 @@ export default function OrganizationUserDetailPage() {
                   onSave={handleSave} 
                   onCancel={handleCancel}
                   isPending={isUpdating}
+                  organizationId={organizationId}
                 />
               ) : (
                 <>
@@ -213,7 +219,7 @@ export default function OrganizationUserDetailPage() {
                         <h3 className="text-sm font-medium text-muted-foreground">Role</h3>
                         <p className="flex items-center mt-1">
                           <Shield className="h-4 w-4 mr-2" />
-                          <Badge variant="outline">{user.role}</Badge>
+                          <Badge variant="outline">{user.roleDisplayName}</Badge>
                         </p>
                       </div>
                       
@@ -231,12 +237,12 @@ export default function OrganizationUserDetailPage() {
                         </p>
                       </div>
                       
-                      {user.organizationId && (
+                      {user.organizationName && (
                         <div>
                           <h3 className="text-sm font-medium text-muted-foreground">Organization</h3>
                           <p className="flex items-center mt-1">
                             <Building className="h-4 w-4 mr-2" />
-                            {organizationId}
+                            {user.organizationName}
                           </p>
                         </div>
                       )}
@@ -300,20 +306,6 @@ export default function OrganizationUserDetailPage() {
             <CardContent>
               <p className="text-sm text-muted-foreground">
                 Activity history will be implemented in a future update.
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="permissions">
-          <Card>
-            <CardHeader>
-              <CardTitle>Permissions</CardTitle>
-              <CardDescription>Manage user permissions and access</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Permissions management will be implemented in a future update.
               </p>
             </CardContent>
           </Card>

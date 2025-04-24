@@ -12,10 +12,14 @@ import {
 /**
  * Hook to get all roles for current organization
  */
-export function useRoles() {
+export function useRoles(organizationId?: string) {
   return useQuery({
-    queryKey: ['roles'],
-    queryFn: () => apiClient<ApiResponse<RolesResponse>>('/roles'),
+    queryKey: ['roles', organizationId],
+    queryFn: () => {
+      const url = organizationId ? `/roles?organizationId=${organizationId}` : '/roles';
+      return apiClient<ApiResponse<RolesResponse>>(url);
+    },
+    enabled: !!organizationId,
   });
 }
 

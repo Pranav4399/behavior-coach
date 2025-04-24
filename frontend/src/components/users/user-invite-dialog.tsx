@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useInviteUser } from '@/hooks/api/use-users';
+import { useRoles } from '@/hooks/api/use-roles';
 import { InviteUserData } from '@/types/user';
 import { toast } from 'sonner';
 
@@ -33,11 +34,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
   name: z.string().optional(),
-  role: z.string({ required_error: 'Please select a role' }),
+  roleId: z.string({ required_error: 'Please select a role' }),
 });
 
 type UserInviteFormValues = z.infer<typeof formSchema>;
@@ -54,11 +56,14 @@ export function UserInviteDialog({ open, onOpenChange, organizationId }: UserInv
     defaultValues: {
       email: '',
       name: '',
-      role: '',
+      roleId: '',
     },
   });
 
   const { mutate: inviteUser, isPending } = useInviteUser();
+  const { data: rolesData, isLoading: isLoadingRoles } = useRoles(organizationId);
+  
+  const roles = rolesData?.data?.roles || [];
 
   const onSubmit = (values: UserInviteFormValues) => {
     inviteUser(
@@ -115,23 +120,39 @@ export function UserInviteDialog({ open, onOpenChange, organizationId }: UserInv
             />
             <FormField
               control={form.control}
-              name="role"
+              name="roleId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Role</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
+                    disabled={isLoadingRoles}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a role" />
+                        <SelectValue placeholder={isLoadingRoles ? "Loading roles..." : "Select a role"} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="member">Member</SelectItem>
-                      <SelectItem value="viewer">Viewer</SelectItem>
+                      {isLoadingRoles ? (
+                        <div className="flex items-center justify-center py-2">
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          <span>Loading roles...</span>
+                        </div>
+                      ) : roles.length > 0 ? (
+                        roles.map((role) => (
+                          <SelectItem key={role.id} value={role.id}>
+                            {role.displayName || role.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <>
+                          <SelectItem value="admin">Admin</SelectItem>
+                          <SelectItem value="member">Member</SelectItem>
+                          <SelectItem value="viewer">Viewer</SelectItem>
+                        </>
+                      )}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -147,7 +168,7 @@ export function UserInviteDialog({ open, onOpenChange, organizationId }: UserInv
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isPending}>
+              <Button type="submit" disabled={isPending || isLoadingRoles}>
                 {isPending ? 'Sending Invitation...' : 'Send Invitation'}
               </Button>
             </DialogFooter>

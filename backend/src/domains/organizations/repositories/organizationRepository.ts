@@ -35,6 +35,22 @@ export const findById = async (id: string): Promise<Organization> => {
 };
 
 /**
+ * Check if an organization with the given name already exists
+ */
+export const existsByName = async (name: string): Promise<boolean> => {
+  const count = await prisma.organization.count({
+    where: { 
+      name: {
+        equals: name,
+        mode: 'insensitive' // Case insensitive comparison
+      }
+    }
+  });
+  
+  return count > 0;
+};
+
+/**
  * Create new organization
  */
 export const create = async (data: {
@@ -45,6 +61,12 @@ export const create = async (data: {
   customTerminology?: Record<string, string>;
   settings?: Record<string, any>;
 }): Promise<Organization> => {
+  // Check if organization with the same name already exists
+  const exists = await existsByName(data.name);
+  if (exists) {
+    throw new AppError(`An organization with the name "${data.name}" already exists`, 400);
+  }
+  
   // Create a temporary Organization instance to validate
   const tempOrg = new Organization({
     id: 'temp',
@@ -93,6 +115,25 @@ export const update = async (
   // Check if organization exists
   const existingOrg = await findById(id);
   
+  // If name is being updated, check if the new name already exists for another organization
+  if (data.name && data.name !== existingOrg.name) {
+    const exists = await prisma.organization.count({
+      where: { 
+        name: {
+          equals: data.name,
+          mode: 'insensitive' // Case insensitive comparison
+        },
+        id: {
+          not: id // Exclude the current organization
+        }
+      }
+    });
+    
+    if (exists > 0) {
+      throw new AppError(`An organization with the name "${data.name}" already exists`, 400);
+    }
+  }
+  
   // Update the organization instance and validate
   existingOrg.update(data);
   
@@ -129,63 +170,6 @@ export const remove = async (id: string): Promise<void> => {
   ]);
 };
 
-/**
- * Create organization with default roles in transaction
- */
-export const createWithRoles = async (
-  data: {
-    name: string;
-    type: OrganizationType;
-    subscriptionTier: string;
-    logoUrl?: string;
-    customTerminology?: Record<string, string>;
-    settings?: Record<string, any>;
-  },
-  createDefaultRolesFn: (orgId: string, type: OrganizationType) => Promise<any[]>
-): Promise<{ organization: Organization; roles: any[] }> => {
-  // Validate the organization data
-  const tempOrg = new Organization({
-    id: 'temp',
-    name: data.name,
-    type: data.type,
-    subscriptionTier: data.subscriptionTier,
-    logoUrl: data.logoUrl,
-    customTerminology: data.customTerminology,
-    settings: data.settings,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  });
-  
-  tempOrg.validate();
-  
-  // Create the organization first
-  const organization = await prisma.organization.create({
-    data: {
-      name: data.name,
-      type: data.type,
-      subscriptionTier: data.subscriptionTier,
-      logoUrl: data.logoUrl,
-      customTerminology: data.customTerminology || {},
-      settings: data.settings || {},
-    },
-  });
-  
-  try {
-    // Now create the roles for the organization after it exists
-    const roles = await createDefaultRolesFn(organization.id, data.type);
-    
-    return { 
-      organization: new Organization(organization), 
-      roles 
-    };
-  } catch (error) {
-    // If role creation fails, clean up by deleting the organization
-    await prisma.organization.delete({
-      where: { id: organization.id }
-    });
-    throw error;
-  }
-};
 
 /**
  * List organizations with pagination and filters

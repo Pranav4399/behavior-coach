@@ -5,13 +5,15 @@ export interface UserProps {
   email: string;
   password?: string; // Optional because we might not always need to expose password
   name?: string | null;
-  role: string;
+  roleId: string;
   organizationId?: string | null;
   createdAt: Date;
   updatedAt: Date;
   status?: 'active' | 'inactive' | 'pending';
   lastLoginAt?: Date | null;
   preferences?: Record<string, any> | null;
+  roleDisplayName?: string;
+  organizationName?: string | null;
 }
 
 export class User {
@@ -19,26 +21,30 @@ export class User {
   email: string;
   password?: string;
   name: string | null;
-  role: string;
+  roleId: string;
   organizationId: string | null;
   createdAt: Date;
   updatedAt: Date;
   status: 'active' | 'inactive' | 'pending';
   lastLoginAt: Date | null;
   preferences: Record<string, any> | null;
+  roleDisplayName?: string;
+  organizationName?: string | null;
 
   constructor(props: UserProps) {
     this.id = props.id;
     this.email = props.email;
     this.password = props.password;
     this.name = props.name || null;
-    this.role = props.role;
+    this.roleId = props.roleId;
     this.organizationId = props.organizationId || null;
     this.createdAt = props.createdAt;
     this.updatedAt = props.updatedAt;
     this.status = props.status || 'pending';
     this.lastLoginAt = props.lastLoginAt || null;
     this.preferences = props.preferences || null;
+    this.roleDisplayName = props.roleDisplayName;
+    this.organizationName = props.organizationName;
   }
 
   /**
@@ -57,8 +63,8 @@ export class User {
     }
 
     // Role validation
-    if (!this.role) {
-      throw new AppError('Role is required', 400);
+    if (!this.roleId) {
+      throw new AppError('Role ID is required', 400);
     }
   }
 
@@ -78,13 +84,15 @@ export class User {
       id: this.id,
       email: this.email,
       name: this.name,
-      role: this.role,
+      roleId: this.roleId,
+      roleDisplayName: this.roleDisplayName,
       organizationId: this.organizationId,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
       status: this.status,
       lastLoginAt: this.lastLoginAt,
-      preferences: this.preferences
+      preferences: this.preferences,
+      organizationName: this.organizationName
     };
   }
 
@@ -103,8 +111,8 @@ export class User {
       this.name = data.name;
     }
 
-    if (data.role) {
-      this.role = data.role;
+    if (data.roleId) {
+      this.roleId = data.roleId;
     }
 
     if (data.organizationId !== undefined) {

@@ -23,6 +23,8 @@ enum OrganizationType {
 model Organization {
   id              String          @id @default(uuid())
   name            String
+  description     String?         // Organization description
+  website         String?         // Organization website URL
   type            OrganizationType
   subscriptionTier String         @map("subscription_tier")
   logoUrl         String?         @map("logo_url")
