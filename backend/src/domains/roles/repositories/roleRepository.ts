@@ -7,10 +7,23 @@ import { Role } from '../models/role';
  */
 export const findAllByOrganization = async (organizationId: string): Promise<Role[]> => {
   const roles = await prisma.role.findMany({
-    where: { organizationId }
+    where: { organizationId },
+    include: {
+      organization: {
+        select: {
+          name: true,
+          type: true
+        }
+      }
+    }
   });
   
-  return roles.map((role: any) => new Role(role));
+  return roles.map((role: any) => new Role({
+    ...role,
+    // Add organization name for display in UI
+    description: role.description || '',
+    organizationName: role.organization?.name || ''
+  }));
 };
 
 /**
@@ -23,6 +36,14 @@ export const findById = async (id: string, organizationId: string): Promise<Role
     where: { 
       id,
       organizationId 
+    },
+    include: {
+      organization: {
+        select: {
+          name: true,
+          type: true
+        }
+      }
     }
   });
   
@@ -30,7 +51,11 @@ export const findById = async (id: string, organizationId: string): Promise<Role
     throw new AppError('Role not found', 404);
   }
   
-  return new Role(role);
+  return new Role({
+    ...role,
+    description: role.description || '',
+    organizationName: role.organization?.name || ''
+  });
 };
 
 /**

@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useCreateRole, useUpdateRole } from '@/hooks/api/use-roles';
+import { useCheckRoleHasUsers, useCreateRole, useUpdateRole } from '@/hooks/api/use-roles';
 import { useOrganizations } from '@/hooks/api/use-organizations';
 import { useOrganization } from '@/hooks/api/use-organizations';
 import { Role } from '@/types/roles';
@@ -88,7 +88,14 @@ export default function RoleDialog({ open, onOpenChange, role }: RoleDialogProps
       ? useOrganizations()
       : useOrganization(user?.organizationId || "");
 
+  // This hook is now at the component top level
+  const { data, isLoading } = useCheckRoleHasUsers(
+    role?.id,
+    isPlatformAdmin ? role?.organizationId : undefined
+  );
   
+  const hasUsers = data?.data?.hasUsers || false;
+
   const organizations = orgsData?.data?.organizations || [];
   
   const form = useForm<RoleFormValues>({
@@ -239,7 +246,7 @@ export default function RoleDialog({ open, onOpenChange, role }: RoleDialogProps
              {/* Organization Selection (only for platform admins or display only for org admins) */}
              <div className="space-y-2">
               <Label htmlFor="organizationId">Organization</Label>
-              {isPlatformAdmin ? (
+              {(isPlatformAdmin && !hasUsers) ? (
                 <Select
                   disabled={isLoadingOrgs}
                   value={form.watch('organizationId')}
@@ -250,7 +257,7 @@ export default function RoleDialog({ open, onOpenChange, role }: RoleDialogProps
                     });
                   }}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select an organization" />
                   </SelectTrigger>
                   <SelectContent>

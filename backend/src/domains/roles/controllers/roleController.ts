@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as roleService from '../services/roleService';
+import * as roleRepository from '../repositories/roleRepository';
 import { AppError } from '../../../common/middleware/errorHandler';
 import { IS_PLATFORM_ADMIN } from '../../../config/permissions';
 
@@ -121,6 +122,18 @@ export const updateRole = async (
     
     if (isPlatformAdmin && req.body.organizationId) {
       targetOrgId = req.body.organizationId;
+      // Check if organizationId is changing
+      const roleId = req.params.id;
+      const role = await roleService.getRole(roleId, targetOrgId);
+      
+      if (req.body.organizationId !== role.organizationId) {
+        // Check if role has associated users before changing organizationId
+        const hasUsers = await roleRepository.hasAssociatedUsers(roleId);
+        if (hasUsers) {
+          throw new AppError('Cannot change organization for a role that has associated users', 400);
+        }
+      }
+      
     } else if (!user.organizationId) {
       throw new AppError('Unauthorized: Missing organization ID', 401);
     }
@@ -175,6 +188,12 @@ export const deleteRole = async (
     
     const roleId = req.params.id;
     
+    // Check if role has associated users
+    const hasUsers = await roleRepository.hasAssociatedUsers(roleId);
+    if (hasUsers) {
+      throw new AppError('Cannot delete a role that has associated users', 400);
+    }
+    
     await roleService.deleteRole(roleId, targetOrgId);
     
     res.status(200).json({
@@ -209,6 +228,47 @@ export const getAllRolesAdmin = async (
       status: 'success',
       data: {
         roles
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Check if a role has associated users
+ * @route GET /api/roles/:id/has-users
+ */
+export const checkRoleHasUsers = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const user = req.user as { organizationId: string; permissions: string[] };
+    const isPlatformAdmin = user.permissions.includes(IS_PLATFORM_ADMIN);
+    
+    // Use organizationId from query params if org admin, otherwise use user's organization
+    let targetOrgId = user.organizationId;
+    
+    if (isPlatformAdmin && req.query.organizationId) {
+      targetOrgId = req.query.organizationId as string;
+    } else if (!user.organizationId) {
+      throw new AppError('Unauthorized: Missing organization ID', 401);
+    }
+    
+    const roleId = req.params.id;
+    
+    // Ensure the role exists and belongs to the target organization
+    await roleService.getRole(roleId, targetOrgId);
+    
+    // Check if the role has associated users
+    const hasUsers = await roleRepository.hasAssociatedUsers(roleId);
+    
+    res.status(200).json({
+      status: 'success',
+      data: {
+        hasUsers
       }
     });
   } catch (error) {

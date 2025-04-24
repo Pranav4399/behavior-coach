@@ -18,11 +18,17 @@ export interface PaginatedResponse<T> {
   };
 }
 
-// Error response type
-export interface ApiError {
-  message: string;
-  statusCode: number;
-  errors?: Record<string, string[]>;
+// Custom API error class to include the full error response
+export class ApiError extends Error {
+  status: number;
+  data: any;
+  
+  constructor(message: string, status: number, data?: any) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.data = data;
+  }
 }
 
 // User type

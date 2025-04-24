@@ -5,7 +5,8 @@ import {
   createRole, 
   updateRole, 
   deleteRole,
-  getAllRolesAdmin
+  getAllRolesAdmin,
+  checkRoleHasUsers
 } from '../controllers/roleController';
 import { authMiddleware as authenticate } from '../../auth/middleware/authMiddleware';
 import { PERMISSIONS } from '../../../config/permissions';
@@ -260,6 +261,41 @@ router.patch('/:id', authenticate, authorize([PERMISSIONS.ROLE.EDIT]), updateRol
  *         description: Role not found
  */
 router.delete('/:id', authenticate, authorize([PERMISSIONS.ROLE.DELETE]), deleteRole);
+
+/**
+ * @swagger
+ * /api/roles/{id}/has-users:
+ *   get:
+ *     summary: Check if a role has associated users
+ *     tags: [Roles]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         required: true
+ *         description: The role ID
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     hasUsers:
+ *                       type: boolean
+ *       404:
+ *         description: Role not found
+ */
+router.get('/:id/has-users', authenticate, authorize([PERMISSIONS.ROLE.VIEW]), checkRoleHasUsers);
 
 /**
  * @swagger

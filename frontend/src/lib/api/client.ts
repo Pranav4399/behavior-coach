@@ -1,3 +1,5 @@
+import { ApiError } from "@/types/common";
+
 // Base API client for making requests
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 
@@ -64,25 +66,27 @@ export async function apiClient<T>(
     const response = await fetch(url, requestOptions);
     
     // Handle unauthorized access
-    // if (response.status === 401) {
-    //   // Clear auth data
-    //   localStorage.removeItem('auth-storage');
+    if (response.status === 401) {
+      // Clear auth data
+      localStorage.removeItem('auth-storage');
       
-    //   // Redirect to login if not already on login page
-    //   if (!window.location.pathname.startsWith('/login')) {
-    //     // Store the current path for redirect after login
-    //     localStorage.setItem('redirectAfterLogin', window.location.pathname);
-    //     window.location.href = '/login';
-    //   }
+      // Redirect to login if not already on login page
+      if (!window.location.pathname.startsWith('/login')) {
+        // Store the current path for redirect after login
+        localStorage.setItem('redirectAfterLogin', window.location.pathname);
+        window.location.href = '/login';
+      }
       
-    //   throw new Error('Session expired. Please login again.');
-    // }
+      throw new Error('Session expired. Please login again.');
+    }
     
     // Handle other API errors
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        errorData.message || `API Error: ${response.status} ${response.statusText}`
+      throw new ApiError(
+        errorData.message || `API Error: ${response.status} ${response.statusText}`,
+        response.status,
+        errorData
       );
     }
     
@@ -93,6 +97,9 @@ export async function apiClient<T>(
     
     return response.json();
   } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
     console.error('API request failed:', error);
     throw error;
   }

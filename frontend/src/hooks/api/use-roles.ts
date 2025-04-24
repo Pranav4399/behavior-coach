@@ -101,4 +101,28 @@ export function useDeleteRole() {
       queryClient.invalidateQueries({ queryKey: ['admin', 'roles'] });
     },
   });
+}
+
+/**
+ * Hook to check if a role has any associated users
+ */
+export function useCheckRoleHasUsers(roleId: string | undefined, organizationId?: string) {
+  return useQuery({
+    queryKey: ['role', roleId, 'has-users', organizationId],
+    queryFn: () => {
+      if (!roleId) {
+        return Promise.resolve({ status: 'success', data: { hasUsers: false } });
+      }
+      
+      // Build the URL with optional organizationId parameter
+      let url = `/roles/${roleId}/has-users`;
+      if (organizationId) {
+        url += `?organizationId=${organizationId}`;
+      }
+      
+      return apiClient<ApiResponse<{ hasUsers: boolean }>>(url);
+    },
+    // Don't run the query if roleId is not provided
+    enabled: !!roleId,
+  });
 } 
