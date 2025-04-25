@@ -37,7 +37,7 @@ module.exports = {
           300: '#93c5fd',
           400: '#60a5fa',
           500: '#3b82f6',
-          600: '#2563eb',  // Secondary brand color
+          600: '#d9e7e8',  // Secondary brand color
           700: '#1d4ed8',
           800: '#1e40af',
           900: '#1e3a8a',

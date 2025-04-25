@@ -51,6 +51,7 @@ export interface UpdateUserData {
   role?: string;
   status?: "active" | "inactive" | "pending";
   preferences?: Record<string, any>;
+  organizationId?: string;
 }
 
 export interface UserPreferences {

@@ -60,11 +60,11 @@
   --popover-foreground: #111827;
   
   /* Primary colors - Deep Purple */
-  --primary: #5b21b6;
+  --primary: #003D63;
   --primary-foreground: #ffffff;
   
   /* Secondary colors - Blue */
-  --secondary: #2563eb;
+  --secondary: #d9e7e8;
   --secondary-foreground: #ffffff;
   
   /* Muted colors */
@@ -82,11 +82,11 @@
   /* Border, input and ring colors */
   --border: #e5e7eb;
   --input: #e5e7eb;
-  --ring: #5b21b6;
+  --ring: #003D63;
   
   /* Chart colors for data visualizations */
-  --chart-1: #5b21b6;
-  --chart-2: #2563eb;
+  --chart-1: #003D63;
+  --chart-2: #d9e7e8;
   --chart-3: #10b981;
   --chart-4: #f59e0b;
   --chart-5: #ef4444;
@@ -94,12 +94,12 @@
   /* Sidebar specific colors */
   --sidebar: #ffffff;
   --sidebar-foreground: #111827;
-  --sidebar-primary: #5b21b6;
+  --sidebar-primary: #003D63;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #f3f4f6;
   --sidebar-accent-foreground: #111827;
   --sidebar-border: #e5e7eb;
-  --sidebar-ring: #5b21b6;
+  --sidebar-ring: #003D63;
 }
 
 .dark {
