@@ -1,7 +1,6 @@
 import express from 'express';
 import { UserController } from '../controllers/userController';
-import { authMiddleware } from '../../auth/middleware/authMiddleware';
-import { authorize } from '../../auth/middleware/authMiddleware';
+import { authMiddleware, authorize, restrictToSameOrganization } from '../../auth/middleware/authMiddleware';
 import { PERMISSIONS } from '../../../config/permissions';
 const router = express.Router();
 const userController = new UserController();
@@ -25,6 +24,7 @@ router.get(
   '/:userId',
   authMiddleware,
   authorize([PERMISSIONS.USER.VIEW]),
+  restrictToSameOrganization('userId'),
   userController.getUserById.bind(userController)
 );
 
@@ -32,6 +32,7 @@ router.patch(
   '/:userId',
   authMiddleware,
   authorize([PERMISSIONS.USER.EDIT]),
+  restrictToSameOrganization('userId'),
   userController.updateUser.bind(userController)
 );
 
@@ -39,6 +40,7 @@ router.delete(
   '/:userId',
   authMiddleware,
   authorize([PERMISSIONS.USER.DELETE]),
+  restrictToSameOrganization('userId'),
   userController.deleteUser.bind(userController)
 );
 
@@ -47,6 +49,7 @@ router.post(
   '/:userId/resend-invite',
   authMiddleware,
   authorize([PERMISSIONS.USER.CREATE]),
+  restrictToSameOrganization('userId'),
   userController.resendInvitation.bind(userController)
 );
 
@@ -55,12 +58,14 @@ router.post(
 router.get(
   '/:userId/preferences',
   authMiddleware,
+  restrictToSameOrganization('userId'),
   userController.getUserPreferences.bind(userController)
 );
 
 router.patch(
   '/:userId/preferences',
   authMiddleware,
+  restrictToSameOrganization('userId'),
   userController.updateUserPreferences.bind(userController)
 );
 

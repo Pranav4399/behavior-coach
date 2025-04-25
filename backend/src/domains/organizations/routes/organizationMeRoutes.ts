@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import * as organizationMeController from '../controllers/organizationMeController';
-import { authMiddleware as authenticate, authorize, requireOrgAdmin, restrictToOrgType } from '../../auth/middleware/authMiddleware';
+import { authMiddleware as authenticate, authorize, restrictToOrgType, restrictToSameOrganization } from '../../auth/middleware/authMiddleware';
 import { PERMISSIONS } from '../../../config/permissions';
 
 const router = Router();
@@ -35,6 +35,7 @@ router.use(authenticate);
  */
 router.get('/', 
   authorize([PERMISSIONS.ORGANIZATION.VIEW]), 
+  restrictToSameOrganization('organizationId'),
   organizationMeController.getCurrentOrganization
 );
 
@@ -79,7 +80,7 @@ router.get('/',
  *         description: Organization not found
  */
 router.patch('/', 
-  requireOrgAdmin, 
+  restrictToSameOrganization('organizationId'), 
   authorize([PERMISSIONS.ORGANIZATION.EDIT]), 
   organizationMeController.updateCurrentOrganization
 );
@@ -149,7 +150,7 @@ router.get('/settings',
  *         description: Organization not found
  */
 router.patch('/settings', 
-  requireOrgAdmin, 
+  restrictToSameOrganization('organizationId'), 
   authorize([PERMISSIONS.ORGANIZATION.MANAGE_SETTINGS]), 
   organizationMeController.updateSettings
 );

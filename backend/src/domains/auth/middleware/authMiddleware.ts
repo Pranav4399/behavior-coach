@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import { AppError } from '../../../common/middleware/errorHandler';
 import { verifyToken } from '../utils/jwt';
 import { AuthService } from '../services/authService';
+import prisma from '../../../../prisma/prisma';
+import { IS_PLATFORM_ADMIN } from '../../../config/permissions';
 
 const authService = new AuthService();
 
@@ -124,36 +126,6 @@ export const authorize = (requiredPermissions: string[] = []) => {
 };
 
 /**
- * Middleware to check if the user is an organization admin
- */
-export const requireOrgAdmin = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    // Check if user exists on the request
-    if (!req.user) {
-      return next(new AppError('Authentication required', 401));
-    }
-    
-    // Check if the user has an organization
-    if (!req.user.organizationId) {
-      return next(new AppError('You are not a member of any organization', 403));
-    }
-    
-    // Check if the user has the org_admin role or is a platform admin
-    if (req.user.roleId === 'org_admin' || req.user.roleId === 'platform_admin') {
-      return next();
-    }
-    
-    return next(new AppError('You must be an organization admin to perform this action', 403));
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
  * Middleware to restrict access to specific organization types
  * @param allowedTypes - Array of organization types allowed for the route
  */
@@ -180,4 +152,70 @@ export const restrictToOrgType = (allowedTypes: ('client' | 'expert')[]) => {
       next(error);
     }
   };
-}; 
+};
+
+/**
+ * Middleware to restrict org admins to only access/modify resources in their own organization
+ * This ensures org admins cannot edit users or organizations outside their scope
+ */
+export const restrictToSameOrganization = (resourceId: string) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      // Check if user exists on the request
+      if (!req.user) {
+        return next(new AppError('Authentication required', 401));
+      }
+      
+      const permissions = await authService.getUserPermissions(req.user!.id);
+      // Allow platform admins to bypass organization restriction
+      if (permissions.includes(IS_PLATFORM_ADMIN)) {
+        return next();
+      }
+      
+      // Check if the user has an organization
+      if (!req.user.organizationId) {
+        return next(new AppError('You are not a member of any organization', 403));
+      }
+      
+      // For body data with organizationId, check if it matches the user's org
+      if (req.body && req.body.organizationId && 
+          req.body.organizationId !== req.user.organizationId) {
+        return next(new AppError('You can only modify resources within your organization', 403));
+      }
+      
+      // For url params with resourceId, extract the resource and check its org
+      if (req.params && req.params[resourceId]) {
+        const resourceOrgId = await getResourceOrganizationId(req.params[resourceId], resourceId);
+        
+        if (resourceOrgId && resourceOrgId !== req.user.organizationId) {
+          return next(new AppError('You can only access resources within your organization', 403));
+        }
+      }
+      
+      next();
+    } catch (error) {
+      next(error);
+    }
+  };
+};
+
+/**
+ * Helper function to get the organization ID for a resource
+ */
+async function getResourceOrganizationId(id: string, resourceType: string): Promise<string | null> {
+  try {
+    if (resourceType === 'userId') {
+      const user = await prisma.user.findUnique({
+        where: { id },
+        select: { organizationId: true }
+      });
+      return user?.organizationId || null;
+    } else if (resourceType === 'organizationId') {
+      return id; // The ID itself is the organization ID
+    }
+    // Add more resource types as needed
+    return null;
+  } catch (error) {
+    return null;
+  }
+} 

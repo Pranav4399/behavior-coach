@@ -23,6 +23,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { usePlatformAdmin } from '@/lib/permission';
 import { ApiError } from '@/types/common';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useAuth } from '@/hooks/useAuth';
 
 // Separate component for the delete button with its own hooks
 function DeleteRoleButton({ 
@@ -81,7 +82,8 @@ function DeleteRoleButton({
 
 export default function RoleList() {
   const isPlatformAdmin = usePlatformAdmin();
-  const { data, isLoading, error } = isPlatformAdmin ? useAdminRoles() : useRoles();
+  const { user } = useAuth();
+  const { data, isLoading, error } = isPlatformAdmin ? useAdminRoles() : useRoles(user?.organizationId);
   const { mutate: deleteRole, isPending: isDeleting } = useDeleteRole();
   
   const [dialogOpen, setDialogOpen] = useState(false);

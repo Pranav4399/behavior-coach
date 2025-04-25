@@ -6,7 +6,7 @@ import {
   updateOrganization, 
   deleteOrganization 
 } from '../controllers/organizationController';
-import { authMiddleware as authenticate, authorize } from '../../auth/middleware/authMiddleware';
+import { authMiddleware as authenticate, authorize, restrictToSameOrganization } from '../../auth/middleware/authMiddleware';
 import { PERMISSIONS } from '../../../config/permissions';
 
 const router = Router();
@@ -124,7 +124,7 @@ router.get('/', authenticate, authorize([PERMISSIONS.ORGANIZATION.VIEW]), getAll
  *       404:
  *         description: Organization not found
  */
-router.get('/:id', authenticate, authorize([PERMISSIONS.ORGANIZATION.VIEW]), getOrganizationById);
+router.get('/:id', authenticate, authorize([PERMISSIONS.ORGANIZATION.VIEW]), restrictToSameOrganization('organizationId'), getOrganizationById);
 
 /**
  * @swagger
@@ -216,7 +216,7 @@ router.post('/', authenticate, authorize([PERMISSIONS.ORGANIZATION.CREATE]), cre
  *       404:
  *         description: Organization not found
  */
-router.put('/:id', authenticate, authorize([PERMISSIONS.ORGANIZATION.EDIT]), updateOrganization);
+router.put('/:id', authenticate, authorize([PERMISSIONS.ORGANIZATION.EDIT]), restrictToSameOrganization('organizationId'), updateOrganization);
 
 /**
  * @swagger
@@ -238,6 +238,6 @@ router.put('/:id', authenticate, authorize([PERMISSIONS.ORGANIZATION.EDIT]), upd
  *       404:
  *         description: Organization not found
  */
-router.delete('/:id', authenticate, authorize([PERMISSIONS.ORGANIZATION.DELETE]), deleteOrganization);
+router.delete('/:id', authenticate, authorize([PERMISSIONS.ORGANIZATION.DELETE]), restrictToSameOrganization('organizationId'), deleteOrganization);
 
 export { router as organizationRoutes }; 

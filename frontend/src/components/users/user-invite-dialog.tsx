@@ -39,7 +39,7 @@ import { Loader2 } from 'lucide-react';
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
   name: z.string().optional(),
-  roleId: z.string({ required_error: 'Please select a role' }),
+  roleId: z.string().min(1, { message: 'Role selection is required' }),
 });
 
 type UserInviteFormValues = z.infer<typeof formSchema>;
@@ -147,11 +147,9 @@ export function UserInviteDialog({ open, onOpenChange, organizationId }: UserInv
                           </SelectItem>
                         ))
                       ) : (
-                        <>
-                          <SelectItem value="admin">Admin</SelectItem>
-                          <SelectItem value="member">Member</SelectItem>
-                          <SelectItem value="viewer">Viewer</SelectItem>
-                        </>
+                        <div className="flex items-center justify-center p-2 text-sm text-muted-foreground">
+                          No roles available
+                        </div>
                       )}
                     </SelectContent>
                   </Select>
