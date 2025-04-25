@@ -93,7 +93,7 @@ export default function ProfilePage() {
   }) => {
     // Update user profile data (only name for now)
     const updateData: UpdateUserData = {
-      name: formData.name,
+      ...formData,
       organizationId: authUser?.organizationId
     };
 
