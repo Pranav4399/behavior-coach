@@ -35,6 +35,7 @@ model Organization {
   users           User[]
   roles           Role[]
   integrations    Integration[]
+  workers         Worker[]        // Relation to Worker
 
   @@map("organizations")
 }
@@ -113,4 +114,188 @@ model Integration {
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   @@map("integrations")
+}
+
+// Worker-related enums
+enum Gender {
+  male
+  female
+  non_binary
+  other
+  prefer_not_say
+}
+
+enum OptInStatus {
+  opted_in
+  opted_out
+  pending
+  failed
+}
+
+enum EmploymentStatus {
+  active
+  inactive
+  on_leave
+  terminated
+}
+
+enum EmploymentType {
+  full_time
+  part_time
+  contractor
+  temporary
+}
+
+enum DeactivationReason {
+  voluntary_resignation
+  performance_issues
+  policy_violation
+  redundancy
+  retirement
+  end_of_contract
+  other
+}
+
+// Core Worker model - contains only essential worker information
+model Worker {
+  id                     String           @id @default(uuid())
+  externalId             String?          @map("external_id")
+  firstName              String           @map("first_name")
+  lastName               String           @map("last_name")
+  dateOfBirth            DateTime?        @map("date_of_birth")
+  gender                 Gender?
+  tags                   String[]
+  customFields           Json?            @map("custom_fields")  // Moving customFields back to the core Worker model
+  
+  // Timestamps
+  createdAt              DateTime         @default(now()) @map("created_at")
+  updatedAt              DateTime         @updatedAt @map("updated_at")
+
+  // Relationships
+  organizationId         String           @map("organization_id")
+  organization           Organization     @relation(fields: [organizationId], references: [id])
+
+  // Relations to other worker-related tables
+  contact               WorkerContact?
+  employment            WorkerEmployment?
+  engagement            WorkerEngagement?
+  wellbeing             WorkerWellbeing?
+  gamification          WorkerGamification?
+  
+  // Self-relation for supervisor (kept in core table for simplicity)
+  supervisorId           String?          @map("supervisor_id")
+  supervisor             Worker?          @relation("WorkerToSupervisor", fields: [supervisorId], references: [id])
+  supervisees            Worker[]         @relation("WorkerToSupervisor")
+
+  isActive            Boolean              @default(true)
+  deactivationReason  DeactivationReason?
+
+  @@map("workers")
+  @@index([organizationId])
+}
+
+// Worker contact information
+model WorkerContact {
+  id                     String           @id @default(uuid())
+  workerId               String           @unique @map("worker_id")
+  worker                 Worker           @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  
+  // Location
+  locationCity           String?          @map("location_city")
+  locationStateProvince  String?          @map("location_state_province")
+  locationCountry        String?          @map("location_country")
+  
+  // Contact & Communication
+  primaryPhoneNumber     String           @unique @map("primary_phone_number")
+  whatsappOptInStatus    OptInStatus      @map("whatsapp_opt_in_status")
+  preferredLanguage      String           @map("preferred_language")
+  communicationConsent   Boolean          @default(false) @map("communication_consent")
+  emailAddress           String?          @map("email_address")
+  
+  // Timestamps
+  createdAt              DateTime         @default(now()) @map("created_at")
+  updatedAt              DateTime         @updatedAt @map("updated_at")
+
+  @@map("worker_contacts")
+  @@index([primaryPhoneNumber])
+}
+
+// Worker employment information
+model WorkerEmployment {
+  id                     String           @id @default(uuid())
+  workerId               String           @unique @map("worker_id")
+  worker                 Worker           @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  
+  // Employment & Organizational Data
+  jobTitle               String?          @map("job_title")
+  department             String?
+  team                   String?
+  hireDate               DateTime?        @map("hire_date")
+  employmentStatus       EmploymentStatus @default(active) @map("employment_status")
+  employmentType         EmploymentType?  @map("employment_type")
+  
+  // Timestamps
+  createdAt              DateTime         @default(now()) @map("created_at")
+  updatedAt              DateTime         @updatedAt @map("updated_at")
+
+  @@map("worker_employments")
+  @@index([employmentStatus])
+  @@index([department])
+  @@index([team])
+}
+
+// Worker platform engagement data
+model WorkerEngagement {
+  id                     String           @id @default(uuid())
+  workerId               String           @unique @map("worker_id")
+  worker                 Worker           @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  
+  // Platform Engagement
+  lastActiveAt           DateTime?        @map("last_active_at")
+  lastInteractionDate    DateTime?        @map("last_interaction_date")
+  
+  // Timestamps
+  createdAt              DateTime         @default(now()) @map("created_at")
+  updatedAt              DateTime         @updatedAt @map("updated_at")
+
+  @@map("worker_engagements")
+  @@index([lastActiveAt])
+  @@index([lastInteractionDate])
+}
+
+// Worker wellbeing assessment data
+model WorkerWellbeing {
+  id                         String     @id @default(uuid())
+  workerId                   String     @unique @map("worker_id")
+  worker                     Worker     @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  
+  // Wellbeing Data
+  lastWellbeingAssessmentDate DateTime?  @map("last_wellbeing_assessment_date")
+  overallWellbeingScore       Float?     @map("overall_wellbeing_score")
+  
+  // Timestamps
+  createdAt                  DateTime   @default(now()) @map("created_at")
+  updatedAt                  DateTime   @updatedAt @map("updated_at")
+
+  @@map("worker_wellbeings")
+  @@index([lastWellbeingAssessmentDate])
+  @@index([overallWellbeingScore])
+}
+
+// Worker gamification data
+model WorkerGamification {
+  id                     String           @id @default(uuid())
+  workerId               String           @unique @map("worker_id")
+  worker                 Worker           @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  
+  // Gamification Data
+  pointsBalance          Int              @default(0) @map("points_balance")
+  badgesEarnedCount      Int              @default(0) @map("badges_earned_count")
+  
+  // Timestamps
+  createdAt              DateTime         @default(now()) @map("created_at")
+  updatedAt              DateTime         @updatedAt @map("updated_at")
+
+  @@map("worker_gamifications")
+  @@index([pointsBalance])
 }

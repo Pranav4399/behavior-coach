@@ -218,9 +218,7 @@ export const create = async (userData: {
     const salt = await bcrypt.genSalt(10);
     hashedPassword = await bcrypt.hash("abcd@1234", salt);
   }
-  
-  console.log(userData.roleId, "see here");
-  
+    
   // Create user in database
   const user = await prisma.user.create({
     data: {

@@ -8,7 +8,6 @@ import * as organizationRepository from './organizationRepository';
  * Find organization by user ID
  */
 export const findByUserId = async (userId: string): Promise<Organization> => {
-  console.log('userId', userId);
   // Fetch the user to get their organization ID
   const user = await prisma.user.findUnique({
     where: { id: userId },

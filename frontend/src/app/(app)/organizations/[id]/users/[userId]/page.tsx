@@ -56,8 +56,6 @@ export default function OrganizationUserDetailPage() {
   const isAdmin = useIsAdmin();
   
   const user = data?.data?.user;
-
-  console.log(user, "user");
   
   const handleBack = () => {
     router.push(`/organizations/${organizationId}/users`);

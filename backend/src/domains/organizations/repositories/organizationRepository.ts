@@ -17,7 +17,6 @@ export const findAll = async (): Promise<Organization[]> => {
  * Find organization by ID
  */
 export const findById = async (id: string): Promise<Organization> => {
-  console.log('id', id);
   const organization = await prisma.organization.findUnique({
     where: { id },
     include: {

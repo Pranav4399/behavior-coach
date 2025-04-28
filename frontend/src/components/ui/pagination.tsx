@@ -109,6 +109,118 @@ const PaginationEllipsis = ({
 )
 PaginationEllipsis.displayName = "PaginationEllipsis"
 
+interface PaginationWithPropsProps {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  className?: string;
+}
+
+const PaginationWithProps = ({
+  currentPage,
+  totalPages,
+  onPageChange,
+  className,
+}: PaginationWithPropsProps) => {
+  // Generate page numbers to show
+  const getPageNumbers = () => {
+    const pageNumbers = [];
+    const maxPagesToShow = 5;
+    
+    if (totalPages <= maxPagesToShow) {
+      // Show all pages if there are few pages
+      for (let i = 1; i <= totalPages; i++) {
+        pageNumbers.push(i);
+      }
+    } else {
+      // Show first page
+      pageNumbers.push(1);
+      
+      // Calculate start and end of the sliding window
+      let start = Math.max(2, currentPage - 1);
+      let end = Math.min(totalPages - 1, currentPage + 1);
+      
+      // Add ellipsis after first page if needed
+      if (start > 2) {
+        pageNumbers.push(-1); // -1 represents ellipsis
+      }
+      
+      // Add pages in the sliding window
+      for (let i = start; i <= end; i++) {
+        pageNumbers.push(i);
+      }
+      
+      // Add ellipsis before last page if needed
+      if (end < totalPages - 1) {
+        pageNumbers.push(-2); // -2 represents ellipsis
+      }
+      
+      // Show last page
+      pageNumbers.push(totalPages);
+    }
+    
+    return pageNumbers;
+  };
+
+  return (
+    <Pagination className={className}>
+      <PaginationContent>
+        {currentPage > 1 && (
+          <PaginationItem>
+            <PaginationPrevious 
+              href="#" 
+              onClick={(e) => {
+                e.preventDefault();
+                onPageChange(currentPage - 1);
+              }} 
+            />
+          </PaginationItem>
+        )}
+        
+        {getPageNumbers().map((pageNumber, i) => {
+          if (pageNumber < 0) {
+            // Render ellipsis
+            return (
+              <PaginationItem key={`ellipsis-${i}`}>
+                <PaginationEllipsis />
+              </PaginationItem>
+            );
+          }
+          
+          return (
+            <PaginationItem key={pageNumber}>
+              <PaginationLink 
+                href="#" 
+                isActive={pageNumber === currentPage}
+                onClick={(e) => {
+                  e.preventDefault();
+                  onPageChange(pageNumber);
+                }}
+              >
+                {pageNumber}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        })}
+        
+        {currentPage < totalPages && (
+          <PaginationItem>
+            <PaginationNext 
+              href="#" 
+              onClick={(e) => {
+                e.preventDefault();
+                onPageChange(currentPage + 1);
+              }} 
+            />
+          </PaginationItem>
+        )}
+      </PaginationContent>
+    </Pagination>
+  );
+};
+
+PaginationWithProps.displayName = "PaginationWithProps";
+
 export {
   Pagination,
   PaginationContent,
@@ -117,4 +229,5 @@ export {
   PaginationPrevious,
   PaginationNext,
   PaginationEllipsis,
+  PaginationWithProps
 } 

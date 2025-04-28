@@ -1,7 +1,8 @@
 import { 
   LayoutDashboard, 
   Building2, 
-  Settings
+  Settings,
+  Users
 } from 'lucide-react';
 
 export interface NavigationItem {
@@ -15,5 +16,6 @@ export interface NavigationItem {
 export const navigationItems: NavigationItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, requiresAuth: true },
   { name: 'Organizations', href: '/organizations', icon: Building2, requiresAuth: true },
+  { name: 'Workers', href: '/workers', icon: Users, requiresAuth: true },
   { name: 'Settings', href: '/settings', icon: Settings, requiresAuth: true, requiresAdmin: true },
 ]; 

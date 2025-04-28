@@ -30,8 +30,6 @@ export const findAllByOrganization = async (organizationId: string): Promise<Rol
  * Find role by ID
  */
 export const findById = async (id: string, organizationId: string): Promise<Role> => {
-  console.log('id', id);
-  console.log('organizationId', organizationId);
   const role = await prisma.role.findFirst({
     where: { 
       id,
