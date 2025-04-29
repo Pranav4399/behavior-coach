@@ -4,7 +4,8 @@ import {
   testRuleAdvanced,
   testSegmentRule,
   explainWorkerMatch,
-  explainWorkerSegmentMatch
+  explainWorkerSegmentMatch,
+  validateRule
 } from '../controllers/ruleTestingController';
 import { authMiddleware as authenticate } from '../../auth/middleware/authMiddleware';
 
@@ -320,5 +321,58 @@ router.post('/explain-worker-match', explainWorkerMatch);
  *         description: Server error
  */
 router.get('/:id/workers/:workerId/explain', explainWorkerSegmentMatch);
+
+/**
+ * @swagger
+ * /api/segments/validate-rule:
+ *   post:
+ *     summary: Validate a segment rule definition without testing against workers
+ *     tags: [RuleTesting]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - rule
+ *             properties:
+ *               rule:
+ *                 $ref: '#/components/schemas/SegmentRule'
+ *     responses:
+ *       200:
+ *         description: Rule validation results
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 valid:
+ *                   type: boolean
+ *                   description: Whether the rule is valid
+ *                 errors:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       path:
+ *                         type: string
+ *                         description: Path to the invalid part of the rule
+ *                       message:
+ *                         type: string
+ *                         description: Error message
+ *                   description: List of validation errors if invalid
+ *       400:
+ *         description: Missing rule definition
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.post('/validate-rule', validateRule);
 
 export const ruleTestingRoutes = router; 

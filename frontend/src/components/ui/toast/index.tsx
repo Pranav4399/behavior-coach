@@ -34,6 +34,10 @@ const toastVariants = cva(
         default: "border bg-background text-foreground",
         destructive:
           "destructive group border-destructive bg-destructive text-destructive-foreground",
+        info: "border bg-blue-500 text-white",
+        success: "border bg-green-500 text-white",
+        warning: "border bg-yellow-500 text-white",
+        error: "border bg-red-500 text-white"
       },
     },
     defaultVariants: {
@@ -121,7 +125,7 @@ ToastDescription.displayName = ToastPrimitives.Description.displayName
 //----------- Toast Hook Implementation -----------//
 
 const TOAST_LIMIT = 5
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_REMOVE_DELAY = 5000  // 5 seconds
 
 type ToasterToast = ToastProps & {
   id: string
@@ -262,6 +266,13 @@ function toast({ ...props }: Toast) {
       },
     },
   })
+
+  // Auto-dismiss after delay
+  const timeoutId = setTimeout(() => {
+    dismiss()
+  }, TOAST_REMOVE_DELAY)
+  
+  toastTimeouts.set(id, timeoutId)
 
   return {
     id,

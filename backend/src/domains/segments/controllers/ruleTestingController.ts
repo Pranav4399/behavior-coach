@@ -226,4 +226,29 @@ export const explainWorkerSegmentMatch = async (req: Request, res: Response, nex
   } catch (error) {
     next(error);
   }
+};
+
+/**
+ * Validate a rule definition without testing against workers
+ * @route POST /api/segments/validate-rule
+ */
+export const validateRule = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { rule } = req.body;
+    
+    if (!rule) {
+      throw new AppError('Rule definition is required', 400);
+    }
+    
+    // Validate the rule definition
+    const validationResult = ruleTestingService.validateRule(rule);
+    
+    res.status(200).json({
+      success: true,
+      valid: validationResult.valid,
+      errors: validationResult.errors
+    });
+  } catch (error) {
+    next(error);
+  }
 }; 
