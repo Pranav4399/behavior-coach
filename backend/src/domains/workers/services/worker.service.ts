@@ -6,12 +6,13 @@ import {
 } from '../models/worker.model';
 import { WorkerRepository } from '../repositories/worker.repository';
 import { AppError } from '../../../common/middleware/errorHandler';
+import { PrismaClient } from '@prisma/client';
 
 export class WorkerService {
   private workerRepository: WorkerRepository;
 
-  constructor() {
-    this.workerRepository = new WorkerRepository();
+  constructor(prisma: PrismaClient) {
+    this.workerRepository = new WorkerRepository(prisma);
   }
 
   /**

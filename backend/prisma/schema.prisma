@@ -36,6 +36,7 @@ model Organization {
   roles           Role[]
   integrations    Integration[]
   workers         Worker[]        // Relation to Worker
+  segments        Segment[]       // Relation to Segment
 
   @@map("organizations")
 }
@@ -60,6 +61,10 @@ model User {
   
   // Relation to UserPreferences
   preferences    UserPreferences?
+  
+  // Relation to segments (for created/modified by)
+  createdSegments Segment[] @relation("CreatedBy")
+  updatedSegments Segment[] @relation("UpdatedBy")
 
   @@map("users")
 }
@@ -187,6 +192,9 @@ model Worker {
   supervisor             Worker?          @relation("WorkerToSupervisor", fields: [supervisorId], references: [id])
   supervisees            Worker[]         @relation("WorkerToSupervisor")
 
+  // Relation to segments
+  segmentMemberships     SegmentMembership[]
+
   isActive            Boolean              @default(true)
   deactivationReason  DeactivationReason?
 
@@ -298,4 +306,88 @@ model WorkerGamification {
 
   @@map("worker_gamifications")
   @@index([pointsBalance])
+}
+
+// Segment-related enums
+enum SegmentType {
+  static     // Manually defined with explicit membership
+  rule_based // Dynamically calculated based on rules
+}
+
+enum SegmentSyncStatus {
+  pending
+  processing
+  completed
+  failed
+}
+
+// Segment model
+model Segment {
+  id                String        @id @default(uuid())
+  name              String
+  description       String?
+  type              SegmentType
+  ruleDefinition    Json?         @map("rule_definition") // JSON object containing rule definition for rule-based segments
+  workerCount       Int           @default(0) @map("worker_count")
+  lastSyncAt        DateTime?     @map("last_sync_at") // When segment membership was last recalculated (for rule-based segments)
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+  
+  // Organization relation
+  organizationId    String        @map("organization_id")
+  organization      Organization  @relation(fields: [organizationId], references: [id])
+  
+  // User audit relations
+  createdById       String?       @map("created_by_id")
+  createdBy         User?         @relation("CreatedBy", fields: [createdById], references: [id])
+  updatedById       String?       @map("updated_by_id")
+  updatedBy         User?         @relation("UpdatedBy", fields: [updatedById], references: [id])
+  
+  // Worker membership relation
+  members           SegmentMembership[]
+  
+  // Sync job relation
+  syncJobs          SegmentSyncJob[]
+
+  @@map("segments")
+  @@index([organizationId])
+  @@index([type])
+  @@index([lastSyncAt])
+}
+
+// Worker-Segment membership model
+model SegmentMembership {
+  id                String        @id @default(uuid())
+  workerId          String        @map("worker_id")
+  worker            Worker        @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  segmentId         String        @map("segment_id")
+  segment           Segment       @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+  ruleMatch         Boolean       @default(false) @map("rule_match") // Whether membership is due to rule match (true) or manual assignment (false)
+  ruleMatchReason   String?       @map("rule_match_reason") // Description of which rules matched, stored as text
+  addedAt           DateTime      @default(now()) @map("added_at")
+  
+  @@unique([workerId, segmentId]) // A worker can only appear once in a segment
+  @@map("segment_memberships")
+  @@index([workerId])
+  @@index([segmentId])
+  @@index([ruleMatch])
+}
+
+// Segment synchronization job model
+model SegmentSyncJob {
+  id                String             @id @default(uuid())
+  segmentId         String             @map("segment_id")
+  segment           Segment            @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+  status            SegmentSyncStatus  @default(pending)
+  startedAt         DateTime?          @map("started_at")
+  completedAt       DateTime?          @map("completed_at")
+  processedCount    Int                @default(0) @map("processed_count") // Number of workers processed
+  matchCount        Int                @default(0) @map("match_count") // Number of workers matching the rules
+  errorMessage      String?            @map("error_message")
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+  
+  @@map("segment_sync_jobs")
+  @@index([segmentId])
+  @@index([status])
 }

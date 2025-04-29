@@ -12,7 +12,8 @@ import { organizationMeRoutes } from './domains/organizations/routes/organizatio
 import { authRoutes } from './domains/auth/routes/authRoutes';
 import { userRoutes } from './domains/user/routes/userRoutes';
 import roleRoutes from './domains/roles/routes/roleRoutes';
-import { workerRoutes, workerCsvRoutes } from './domains/workers/routes';
+import { workerRoutes, workerCsvRoutes, workerSegmentRoutes } from './domains/workers/routes';
+import { segmentRoutes } from './domains/segments/routes';
 import { ENV } from './config/env';
 
 // Initialize express app
@@ -132,6 +133,8 @@ app.use('/api/users', userRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/workers', workerRoutes);
 app.use('/api/workers/csv', workerCsvRoutes);
+app.use('/api/workers', workerSegmentRoutes);
+app.use('/api/segments', segmentRoutes);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
 
 // 404 handler

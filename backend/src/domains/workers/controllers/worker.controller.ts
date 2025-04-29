@@ -17,6 +17,7 @@ import {
   DeactivationReason
 } from '../models/worker.model';
 import { AppError } from '../../../common/middleware/errorHandler';
+import prisma from '../../../../prisma/prisma';
 
 // Define interfaces for update objects to replace 'any'
 interface ContactUpdates {
@@ -112,7 +113,7 @@ export class WorkerController {
   private workerService: WorkerService;
 
   constructor() {
-    this.workerService = new WorkerService();
+    this.workerService = new WorkerService(prisma);
   }
 
   /**

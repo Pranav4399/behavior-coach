@@ -1,4 +1,3 @@
-import { PrismaClient } from '@prisma/client';
 import { 
   Worker, 
   WorkerProps,
@@ -10,7 +9,7 @@ import {
   EmploymentType,
   DeactivationReason
 } from '../models/worker.model';
-import prisma from '../../../../prisma/prisma';
+import { PrismaClient } from '@prisma/client';
 
 // Define type for transaction client
 type PrismaTransactionClient = Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>;
@@ -105,7 +104,7 @@ type PrismaWhereClause = {
 export class WorkerRepository {
   private prisma: PrismaClient;
 
-  constructor() {
+  constructor(prisma: PrismaClient) {
     this.prisma = prisma;
   }
 

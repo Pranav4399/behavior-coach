@@ -3,13 +3,14 @@ import { WorkerService } from '../services/worker.service';
 import workerCsvService from '../services/worker-csv.service';
 import { Worker } from '../models/worker.model';
 import { AppError } from '../../../common/middleware/errorHandler';
+import prisma from '../../../../prisma/prisma';
 
 export class WorkerCsvController {
   private workerService: WorkerService;
   private BATCH_SIZE = 100; // Process workers in batches of 100
 
   constructor() {
-    this.workerService = new WorkerService();
+    this.workerService = new WorkerService(prisma);
   }
 
   /**
