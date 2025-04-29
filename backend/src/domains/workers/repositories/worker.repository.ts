@@ -827,4 +827,95 @@ export class WorkerRepository {
 
     return { workers, total };
   }
+
+  /**
+   * Find workers by their external IDs
+   * @param externalIds Array of external IDs
+   * @returns Promise with array of workers matching the external IDs
+   */
+  async findByExternalIds(externalIds: string[]): Promise<Worker[]> {
+    if (!externalIds.length) {
+      return [];
+    }
+    
+    const workersData = await this.prisma.worker.findMany({
+      where: {
+        externalId: {
+          in: externalIds
+        }
+      },
+      include: {
+        contact: true,
+        employment: true,
+        engagement: true,
+        wellbeing: true,
+        gamification: true
+      }
+    });
+    
+    // Map to Worker class instances
+    return workersData.map((worker: PrismaWorkerData) => this.mapToWorkerClass(worker));
+  }
+
+  /**
+   * Find workers by their email addresses
+   * @param emails Array of email addresses
+   * @returns Promise with array of workers matching the email addresses
+   */
+  async findByEmails(emails: string[]): Promise<Worker[]> {
+    if (!emails.length) {
+      return [];
+    }
+    
+    const workersData = await this.prisma.worker.findMany({
+      where: {
+        contact: {
+          emailAddress: {
+            in: emails
+          }
+        }
+      },
+      include: {
+        contact: true,
+        employment: true,
+        engagement: true,
+        wellbeing: true,
+        gamification: true
+      }
+    });
+    
+    // Map to Worker class instances
+    return workersData.map((worker: PrismaWorkerData) => this.mapToWorkerClass(worker));
+  }
+
+  /**
+   * Find workers by their phone numbers
+   * @param phoneNumbers Array of phone numbers
+   * @returns Promise with array of workers matching the phone numbers
+   */
+  async findByPhoneNumbers(phoneNumbers: string[]): Promise<Worker[]> {
+    if (!phoneNumbers.length) {
+      return [];
+    }
+    
+    const workersData = await this.prisma.worker.findMany({
+      where: {
+        contact: {
+          primaryPhoneNumber: {
+            in: phoneNumbers
+          }
+        }
+      },
+      include: {
+        contact: true,
+        employment: true,
+        engagement: true,
+        wellbeing: true,
+        gamification: true
+      }
+    });
+    
+    // Map to Worker class instances
+    return workersData.map((worker: PrismaWorkerData) => this.mapToWorkerClass(worker));
+  }
 } 

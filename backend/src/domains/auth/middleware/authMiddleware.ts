@@ -219,3 +219,18 @@ async function getResourceOrganizationId(id: string, resourceType: string): Prom
     return null;
   }
 } 
+
+/**
+* Middleware to block platform admins from accessing worker endpoints
+*/
+export const blockPlatformAdmin = (req: Request, res: Response, next: NextFunction): void => {
+ // If user is a platform admin, deny access
+ if (req.user && req.user.permissions && req.user.permissions.includes(IS_PLATFORM_ADMIN)) {
+   res.status(403).json({
+     success: false,
+     message: 'Platform administrators do not have access to worker management'
+   });
+   return;
+ }
+ next();
+};

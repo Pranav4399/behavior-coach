@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { PlusCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { PlusCircle, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { useWorkers, useBulkDeleteWorkers, useBulkUpdateWorkers } from '@/hooks/api/use-workers';
@@ -10,14 +10,33 @@ import WorkerList from '@/components/workers/WorkerList';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/toast';
 import CreateWorkerDialog from '@/components/workers/CreateWorkerDialog';
+import { useAdminType } from '@/lib/permission';
 
 export default function WorkersPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { isPlatformAdmin } = useAdminType();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [filters, setFilters] = useState<WorkerFilterOptions>({});
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  
+  // Redirect platform admins to the dashboard
+  useEffect(() => {
+    if (isPlatformAdmin) {
+      toast({
+        title: 'Access Denied',
+        description: 'Platform administrators do not have access to worker management',
+        variant: 'destructive',
+      });
+      router.push('/dashboard');
+    }
+  }, [isPlatformAdmin, router, toast]);
+  
+  // If the user is a platform admin, don't render anything while redirecting
+  if (isPlatformAdmin) {
+    return null;
+  }
   
   // Fetch workers
   const { data, isLoading, error } = useWorkers(page, limit, filters);
@@ -86,10 +105,16 @@ export default function WorkersPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Workers</h1>
-        <Button onClick={handleCreateWorker}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add Worker
-        </Button>
+        <div className="flex space-x-2">
+          <Button variant="outline" onClick={() => router.push('/workers/import')}>
+            <Upload className="mr-2 h-4 w-4" />
+            Import CSV
+          </Button>
+          <Button onClick={handleCreateWorker}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add Worker
+          </Button>
+        </div>
       </div>
       
       <Tabs defaultValue="all">

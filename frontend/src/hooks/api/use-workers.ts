@@ -9,7 +9,9 @@ import {
   WorkerBulkImportData,
   WorkerBulkUpdateData,
   WorkerBulkDeleteData,
-  WorkerTagsData
+  WorkerTagsData,
+  WorkerCsvValidationResponse,
+  WorkerCsvUploadResponse
 } from '@/types/worker';
 import { useAuth } from '../useAuth';
 import { apiClient } from '@/lib/api/client';
@@ -239,4 +241,142 @@ export function useRemoveWorkerTag(workerId: string) {
       queryClient.invalidateQueries({ queryKey: ['workers', workerId] });
     }
   });
+}
+
+/**
+ * Hook for uploading a CSV file with worker data
+ */
+export function useWorkerCsvUpload() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ 
+      file, 
+      mode = 'create', 
+      dryRun = false 
+    }: { 
+      file: File; 
+      mode?: 'create' | 'update'; 
+      dryRun?: boolean 
+    }) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const params = new URLSearchParams();
+      params.append('mode', mode);
+      if (dryRun) params.append('dryRun', 'true');
+      
+      // Using fetch directly as our apiClient doesn't handle multipart/form-data
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}/workers/csv/upload?${params.toString()}`, {
+        method: 'POST',
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to upload CSV');
+      }
+      
+      return response.json() as Promise<WorkerCsvUploadResponse>;
+    },
+    onSuccess: () => {
+      // Invalidate workers list query
+      queryClient.invalidateQueries({ queryKey: ['workers'] });
+    }
+  });
+}
+
+/**
+ * Hook for validating a CSV file without importing
+ */
+export function useWorkerCsvValidate() {
+  return useMutation({
+    mutationFn: async ({ file }: { file: File }) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      // Using fetch directly as our apiClient doesn't handle multipart/form-data
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}/workers/csv/validate`, {
+        method: 'POST',
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to validate CSV');
+      }
+      
+      return response.json() as Promise<WorkerCsvValidationResponse>;
+    }
+  });
+}
+
+/**
+ * Hook for downloading a CSV template
+ */
+export function useWorkerCsvTemplate() {
+  return {
+    download: async () => {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}/workers/csv/template`, {
+        method: 'GET',
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to download template');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'worker_template.csv';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    }
+  };
+}
+
+/**
+ * Hook for downloading a sample CSV file
+ */
+export function useWorkerCsvSample() {
+  return {
+    download: async () => {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}/workers/csv/sample`, {
+        method: 'GET',
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to download sample');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'worker_sample.csv';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    }
+  };
 } 

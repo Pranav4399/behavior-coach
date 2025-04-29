@@ -216,4 +216,36 @@ export class WorkerService {
       }
     });
   }
+
+  /**
+   * Get workers by their external IDs
+   * @param externalIds Array of external IDs to lookup
+   * @returns Promise with array of found workers
+   */
+  async getWorkersByExternalIds(externalIds: string[]): Promise<Worker[]> {
+    const workers = await this.workerRepository.findByExternalIds(externalIds);
+    return workers;
+  }
+
+  /**
+   * Get workers by their email addresses
+   * @param emails Array of email addresses to lookup
+   * @returns Promise with array of found workers
+   */
+  async getWorkersByEmails(emails: string[]): Promise<Worker[]> {
+    if (!emails.length) return [];
+    const workers = await this.workerRepository.findByEmails(emails);
+    return workers;
+  }
+
+  /**
+   * Get workers by their phone numbers
+   * @param phoneNumbers Array of phone numbers to lookup
+   * @returns Promise with array of found workers
+   */
+  async getWorkersByPhoneNumbers(phoneNumbers: string[]): Promise<Worker[]> {
+    if (!phoneNumbers.length) return [];
+    const workers = await this.workerRepository.findByPhoneNumbers(phoneNumbers);
+    return workers;
+  }
 } 

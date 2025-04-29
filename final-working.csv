@@ -1,0 +1,2 @@
+firstName,lastName,externalId,dateOfBirth,gender,tags,isActive,deactivationReason,primaryPhoneNumber,secondaryPhoneNumber,emailAddress,primaryEmailAddress,secondaryEmailAddress,whatsappOptInStatus,preferredLanguage,communicationConsent,locationCity,locationStateProvince,locationCountry,jobTitle,department,team,employmentStatus,employmentType,hireDate,lastActiveAt,lastInteractionDate,lastEngagementDate
+John,Doe,,,,,true,,+919876543210,,,,,,,,,,,,,,,,,,,

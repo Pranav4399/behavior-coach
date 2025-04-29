@@ -146,4 +146,63 @@ export interface WorkerBulkDeleteData {
 
 export interface WorkerTagsData {
   tags: string[];
+}
+
+/**
+ * Error severity for CSV validation errors
+ */
+export type ErrorSeverity = 'error' | 'warning' | 'info';
+
+/**
+ * CSV validation error
+ */
+export interface CsvValidationError {
+  row: number;
+  column: string;
+  message: string;
+  value?: any;
+  severity: ErrorSeverity;
+  code?: string;
+  suggestedFix?: string;
+}
+
+/**
+ * Response from CSV validation endpoint
+ */
+export interface WorkerCsvValidationResponse {
+  success: boolean;
+  message: string;
+  errors: CsvValidationError[];
+  errorsByRow: Record<number, CsvValidationError[]>;
+  errorStats: {
+    error: number;
+    warning: number;
+    info: number;
+  };
+  errorsByCode: Record<string, number>;
+  validRecords: number;
+  totalRecords: number;
+  summary?: {
+    totalRows: number;
+    validRows: number;
+    errorRows: number;
+    warningRows: number;
+  };
+}
+
+/**
+ * Response from CSV upload endpoint
+ */
+export interface WorkerCsvUploadResponse {
+  success: boolean;
+  message: string;
+  count: number;
+  failedCount?: number;
+  notFoundCount?: number;
+  mode: 'create' | 'update';
+  processingResults?: {
+    successful: Array<string | { id: string; name: string }>;
+    failed: Array<{ id?: string; firstName?: string; lastName?: string; name?: string; error: string }>;
+    notFound?: Array<{ externalId?: string; name: string; identifiers: { email?: string; phone?: string } }>;
+  };
 } 

@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { WorkerController } from '../controllers/worker.controller';
 import { authMiddleware as authenticate, authorize } from '../../auth/middleware/authMiddleware';
-import { PERMISSIONS } from '../../../config/permissions';
+import { blockPlatformAdmin } from '../../auth/middleware/authMiddleware';
+
 const router = Router();
 const workerController = new WorkerController();
 
@@ -161,6 +162,7 @@ const workerController = new WorkerController();
 router.get(
   '/',
   authenticate,
+  blockPlatformAdmin,
   workerController.getWorkers
 );
 
@@ -201,6 +203,7 @@ router.get(
 router.get(
   '/:id',
   authenticate,
+  blockPlatformAdmin,
   workerController.getWorkerById
 );
 
@@ -291,6 +294,7 @@ router.get(
 router.post(
   '/',
   authenticate,
+  blockPlatformAdmin,
   workerController.createWorker
 );
 
@@ -379,6 +383,7 @@ router.post(
 router.patch(
   '/:id',
   authenticate,
+  blockPlatformAdmin,
   workerController.updateWorker
 );
 
@@ -419,6 +424,7 @@ router.patch(
 router.delete(
   '/:id',
   authenticate,
+  blockPlatformAdmin,
   workerController.deleteWorker
 );
 
@@ -467,6 +473,7 @@ router.delete(
 router.post(
   '/bulk-import',
   authenticate,
+  blockPlatformAdmin,
   workerController.bulkImportWorkers
 );
 
@@ -517,6 +524,7 @@ router.post(
 router.post(
   '/bulk-update',
   authenticate,
+  blockPlatformAdmin,
   workerController.bulkUpdateWorkers
 );
 
@@ -561,6 +569,7 @@ router.post(
 router.post(
   '/bulk-delete',
   authenticate,
+  blockPlatformAdmin,
   workerController.bulkDeleteWorkers
 );
 
@@ -614,6 +623,7 @@ router.post(
 router.post(
   '/:id/tags',
   authenticate,
+  blockPlatformAdmin,
   workerController.addWorkerTags
 );
 
@@ -660,6 +670,7 @@ router.post(
 router.delete(
   '/:id/tags/:tag',
   authenticate,
+  blockPlatformAdmin,
   workerController.removeWorkerTag
 );
 
