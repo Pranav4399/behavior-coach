@@ -28,6 +28,12 @@ import { Worker } from '@/types/worker';
 import { useToast } from '@/components/ui/toast';
 import { Loader2, Search, Trash2, UserPlus } from 'lucide-react';
 import AddWorkersDialog from './AddWorkersDialog';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface SegmentMembersViewProps {
   segment: Segment;
@@ -107,13 +113,28 @@ export default function SegmentMembersView({ segment }: SegmentMembersViewProps)
           />
         </div>
         
-        <Button 
-          onClick={() => setIsAddingWorkers(true)}
-          disabled={segment.type === 'rule_based'}
-        >
-          <UserPlus className="mr-2 h-4 w-4" />
-          Add Workers
-        </Button>
+        {segment.type === 'rule_based' ? (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="inline-block">
+                  <Button disabled className="cursor-not-allowed">
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Add Workers
+                  </Button>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="left">
+                <p>Members cannot be added manually to rule-based segments</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : (
+          <Button onClick={() => setIsAddingWorkers(true)}>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Add Workers
+          </Button>
+        )}
       </div>
       
       {segment.type === 'rule_based' && (
@@ -173,19 +194,41 @@ export default function SegmentMembersView({ segment }: SegmentMembersViewProps)
                       <TableCell>{worker.employment?.department || 'N/A'}</TableCell>
                       <TableCell>{worker.employment?.jobTitle || 'N/A'}</TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleRemoveWorker(worker)}
-                          title="Remove worker"
-                          disabled={removeWorker.isPending && removeWorker.variables === worker.id}
-                        >
-                          {removeWorker.isPending && removeWorker.variables === worker.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          )}
-                        </Button>
+                        {segment.type === 'rule_based' ? (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="inline-block">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    disabled={true}
+                                    className="cursor-not-allowed"
+                                  >
+                                    <Trash2 className="h-4 w-4 text-muted-foreground" />
+                                  </Button>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent side="left">
+                                <p>Members cannot be removed manually from rule-based segments</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRemoveWorker(worker)}
+                            title="Remove worker"
+                            disabled={removeWorker.isPending && removeWorker.variables === worker.id}
+                          >
+                            {removeWorker.isPending && removeWorker.variables === worker.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            )}
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))

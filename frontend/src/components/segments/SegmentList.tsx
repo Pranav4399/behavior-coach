@@ -106,7 +106,7 @@ export default function SegmentList({
                       <TableCell className="font-medium">
                         {segment.name}
                         {segment.description && (
-                          <p className="text-xs text-muted-foreground mt-1">
+                          <p className="text-xs text-muted-foreground mt-1 truncate max-w-xs" title={segment.description}>
                             {segment.description}
                           </p>
                         )}

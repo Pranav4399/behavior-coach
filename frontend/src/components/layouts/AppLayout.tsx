@@ -3,6 +3,7 @@
 import React, { ReactNode, useState } from 'react';
 import { Navbar, Sidebar } from '../navigation';
 import { Toaster } from '@/components/ui/toast';
+import NavigationLoader from '../navigation/NavigationLoader';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -32,6 +33,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
           {children}
         </main>
       </div>
+      
+      {/* Navigation loading spinner */}
+      <NavigationLoader />
       
       {/* Toast notifications */}
       <Toaster />

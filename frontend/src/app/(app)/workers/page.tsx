@@ -118,33 +118,6 @@ export default function WorkersPage() {
       </div>
       
       <Tabs defaultValue="all">
-        <TabsList>
-          <TabsTrigger 
-            value="all"
-            onClick={() => handleFiltersChange({ ...filters, employmentStatus: undefined })}
-          >
-            All Workers
-          </TabsTrigger>
-          <TabsTrigger 
-            value="active"
-            onClick={() => handleFiltersChange({ ...filters, employmentStatus: 'active' })}
-          >
-            Active
-          </TabsTrigger>
-          <TabsTrigger
-            value="inactive"
-            onClick={() => handleFiltersChange({ ...filters, employmentStatus: 'inactive' })}
-          >
-            Inactive
-          </TabsTrigger>
-          <TabsTrigger
-            value="on_leave"
-            onClick={() => handleFiltersChange({ ...filters, employmentStatus: 'on_leave' })}
-          >
-            On Leave
-          </TabsTrigger>
-        </TabsList>
-        
         <TabsContent value="all" className="mt-4">
           <WorkerList
             workers={data?.workers || []}

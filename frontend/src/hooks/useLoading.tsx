@@ -26,7 +26,8 @@ const withMinDuration = async <T,>(
   
   const elapsed = Date.now() - startTime;
   if (elapsed < minDuration) {
-    await new Promise(resolve => setTimeout(resolve, minDuration - elapsed));
+    const remainingTime = minDuration - elapsed;
+    await new Promise(resolve => setTimeout(resolve, remainingTime));
   }
   
   return result;

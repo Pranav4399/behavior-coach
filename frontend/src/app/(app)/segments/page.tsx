@@ -77,27 +77,6 @@ export default function SegmentsPage() {
       </div>
       
       <Tabs defaultValue="all">
-        <TabsList>
-          <TabsTrigger 
-            value="all"
-            onClick={() => handleFiltersChange({ ...filters, type: undefined })}
-          >
-            All Segments
-          </TabsTrigger>
-          <TabsTrigger 
-            value="static"
-            onClick={() => handleFiltersChange({ ...filters, type: 'static' })}
-          >
-            Static
-          </TabsTrigger>
-          <TabsTrigger
-            value="rule"
-            onClick={() => handleFiltersChange({ ...filters, type: 'rule' })}
-          >
-            Rule-based
-          </TabsTrigger>
-        </TabsList>
-        
         <TabsContent value="all" className="mt-4">
           <SegmentList
             segments={data?.segments || []}
