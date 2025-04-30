@@ -7,14 +7,7 @@ import * as authApi from '../lib/api/auth';
 import { LoadingOverlay } from '@/components/auth/loading-overlay';
 import { withMinDuration } from '@/hooks/useLoading';
 import { usePermissionsStore } from '@/store/permissions';
-
-interface User {
-  id: string;
-  email: string;
-  name?: string;
-  roleId?: string;
-  organizationId?: string;
-}
+import { useAuthStore, User } from '@/store/auth';
 
 interface AuthContextType {
   user: User | null;
@@ -31,20 +24,19 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingMessage, setLoadingMessage] = useState('Checking authentication...');
   const [error, setError] = useState<string | null>(null);
   const { fetchPermissions, clearPermissions } = usePermissionsStore();
+  
+  // Use the auth store
+  const { token, user, redirectUrl, setToken, setUser, clearAuth, clearRedirectUrl } = useAuthStore();
 
   const checkAuth = async () => {
     try {
       setLoadingMessage('Checking authentication...');
-      const token = localStorage.getItem('token');
-      const userData = localStorage.getItem('user');
       
-      if (token && userData) {
-        setUser(JSON.parse(userData));
+      if (token && user) {
         // Fetch permissions if we have a token
         await fetchPermissions();
       }
@@ -67,10 +59,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       );
       
       setLoadingMessage('Setting up your account...');
-      // Store auth data
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      
+      // Store auth data in Zustand
+      setToken(response.data.token);
       setUser(response.data.user);
       
       // Fetch user permissions
@@ -78,10 +68,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await fetchPermissions();
 
       // Check for redirect URL
-      const redirectUrl = localStorage.getItem('redirectAfterLogin');
       if (redirectUrl) {
         setLoadingMessage('Redirecting...');
-        localStorage.removeItem('redirectAfterLogin');
+        clearRedirectUrl();
         router.push(redirectUrl);
       } else {
         setLoadingMessage('Taking you to dashboard...');
@@ -93,7 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [router, fetchPermissions]);
+  }, [router, fetchPermissions, setToken, setUser, redirectUrl, clearRedirectUrl]);
 
   const logout = useCallback(async () => {
     try {
@@ -103,10 +92,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Wrap logout operations with minimum duration
       await withMinDuration(
         (async () => {
-          // Client-side logout operations
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          setUser(null);
+          // Client-side logout operations using Zustand
+          clearAuth();
           // Clear permissions
           clearPermissions();
         })()
@@ -119,7 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [router, clearPermissions]);
+  }, [router, clearPermissions, clearAuth]);
 
   useEffect(() => {
     checkAuth();

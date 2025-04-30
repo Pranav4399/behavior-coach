@@ -15,6 +15,7 @@ import {
 } from '@/types/worker';
 import { useAuth } from '../useAuth';
 import { apiClient } from '@/lib/api/client';
+import { useAuthStore } from '@/store/auth';
 
 /**
  * Hook for fetching a paginated list of workers with filtering options
@@ -267,7 +268,7 @@ export function useWorkerCsvUpload() {
       if (dryRun) params.append('dryRun', 'true');
       
       // Using fetch directly as our apiClient doesn't handle multipart/form-data
-      const token = localStorage.getItem('token');
+      const token = useAuthStore.getState().token;
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}/workers/csv/upload?${params.toString()}`, {
         method: 'POST',
         headers: {
@@ -300,7 +301,7 @@ export function useWorkerCsvValidate() {
       formData.append('file', file);
       
       // Using fetch directly as our apiClient doesn't handle multipart/form-data
-      const token = localStorage.getItem('token');
+      const token = useAuthStore.getState().token;
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}/workers/csv/validate`, {
         method: 'POST',
         headers: {
@@ -325,7 +326,7 @@ export function useWorkerCsvValidate() {
 export function useWorkerCsvTemplate() {
   return {
     download: async () => {
-      const token = localStorage.getItem('token');
+      const token = useAuthStore.getState().token;
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}/workers/csv/template`, {
         method: 'GET',
         headers: {
@@ -356,7 +357,7 @@ export function useWorkerCsvTemplate() {
 export function useWorkerCsvSample() {
   return {
     download: async () => {
-      const token = localStorage.getItem('token');
+      const token = useAuthStore.getState().token;
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}/workers/csv/sample`, {
         method: 'GET',
         headers: {

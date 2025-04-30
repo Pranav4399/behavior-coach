@@ -1,4 +1,5 @@
 import { ApiError } from "@/types/common";
+import { useAuthStore } from "@/store/auth";
 
 // Base API client for making requests
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
@@ -31,7 +32,7 @@ const buildUrl = (endpoint: string, params?: Record<string, string>) => {
 // Helper function to get auth token
 const getAuthToken = () => {
   try {
-    return localStorage.getItem('token');
+    return useAuthStore.getState().token;
   } catch (error) {
     console.error('Error reading auth token:', error);
   }
@@ -68,12 +69,12 @@ export async function apiClient<T>(
     // Handle unauthorized access
     if (response.status === 401) {
       // Clear auth data
-      localStorage.removeItem('auth-storage');
+      useAuthStore.getState().clearAuth();
       
       // Redirect to login if not already on login page
       if (!window.location.pathname.startsWith('/login')) {
         // Store the current path for redirect after login
-        localStorage.setItem('redirectAfterLogin', window.location.pathname);
+        useAuthStore.getState().setRedirectUrl(window.location.pathname);
         window.location.href = '/login';
       }
       
