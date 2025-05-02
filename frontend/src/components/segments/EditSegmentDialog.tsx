@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -87,24 +87,6 @@ export default function EditSegmentDialog({
     },
   });
 
-  // Update form values when segment changes
-  useEffect(() => {
-    if (open) {
-      form.reset({
-        name: segment.name,
-        description: segment.description || '',
-        type: segment.type,
-      });
-      
-      // Reset rule state with segment's rule definition or empty rule
-      setRuleDefinition(segment.ruleDefinition || createEmptyRule());
-      setIsRuleValid(true);
-      setRuleError(null);
-      setTestResult(null);
-      updateHasRuleConditions(segment.ruleDefinition || createEmptyRule());
-    }
-  }, [segment, form, open]);
-  
   // Function to count conditions in a rule
   const countConditions = (rule: SegmentRule): number => {
     return rule.conditions.reduce((count, condition) => {
@@ -118,6 +100,32 @@ export default function EditSegmentDialog({
   // Update hasRuleConditions when rule changes
   const updateHasRuleConditions = (rule: SegmentRule) => {
     setHasRuleConditions(countConditions(rule) > 0);
+  };
+  
+  // Reset form and state when dialog opens or segment changes
+  const resetFormAndState = () => {
+    form.reset({
+      name: segment.name,
+      description: segment.description || '',
+      type: segment.type,
+    });
+    
+    // Reset rule state with segment's rule definition or empty rule
+    const initialRule = segment.ruleDefinition || createEmptyRule();
+    setRuleDefinition(initialRule);
+    setIsRuleValid(true);
+    setRuleError(null);
+    setTestResult(null);
+    updateHasRuleConditions(initialRule);
+  };
+  
+  // Handle dialog open/close
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      onClose();
+    } else {
+      resetFormAndState();
+    }
   };
   
   // Handle rule updates from RuleBuilder
@@ -225,7 +233,7 @@ export default function EditSegmentDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className={segment.type === 'rule_based' ? "sm:max-w-[800px] max-h-[90vh] overflow-y-auto" : "sm:max-w-[500px]"}>
         <DialogHeader>
           <DialogTitle>Edit Segment</DialogTitle>

@@ -9,6 +9,18 @@ import { useToast } from '@/components/ui/toast';
 import { useAuth } from '@/hooks/useAuth';
 import { Worker, WorkerUpdateData, Gender, OptInStatus, EmploymentStatus, EmploymentType, DeactivationReason } from '@/types/worker';
 import { DatePicker } from '@/components/ui/date-picker';
+import {
+  GENDER_OPTIONS,
+  EMPLOYMENT_STATUS_OPTIONS,
+  EMPLOYMENT_TYPE_OPTIONS,
+  DEPARTMENT_OPTIONS,
+  JOB_TITLE_OPTIONS,
+  LOCATION_COUNTRY_OPTIONS,
+  LOCATION_STATE_OPTIONS,
+  PREFERRED_LANGUAGE_OPTIONS,
+  WHATSAPP_OPTIN_OPTIONS,
+  DEACTIVATION_REASON_OPTIONS
+} from '@/constants/formOptions';
 
 import {
   Dialog,
@@ -67,6 +79,7 @@ export default function EditWorkerDialog({
   const updateWorker = useUpdateWorker(worker.id);
   const [tags, setTags] = useState<string[]>(worker.tags || []);
   const [tagInput, setTagInput] = useState('');
+  const [apiError, setApiError] = useState<string | null>(null);
 
   // Initialize form with worker data
   const form = useForm<WorkerUpdateData>({
@@ -85,8 +98,8 @@ export default function EditWorkerDialog({
       emailAddress: worker.contact?.emailAddress || '',
       locationCity: worker.contact?.locationCity || '',
       locationStateProvince: worker.contact?.locationStateProvince || '',
-      locationCountry: worker.contact?.locationCountry || 'India',
-      preferredLanguage: worker.contact?.preferredLanguage || 'en-IN',
+      locationCountry: worker.contact?.locationCountry || 'IN',
+      preferredLanguage: worker.contact?.preferredLanguage || 'hi',
       jobTitle: worker.employment?.jobTitle || '',
       department: worker.employment?.department || '',
       team: worker.employment?.team || '',
@@ -98,6 +111,8 @@ export default function EditWorkerDialog({
 
   // Form submission handler
   const onSubmit = async (data: WorkerUpdateData) => {
+    setApiError(null); // Reset any previous errors
+    
     try {
       // Validate dates (should not be in the future)
       if (data.dateOfBirth) {
@@ -140,9 +155,32 @@ export default function EditWorkerDialog({
       onClose();
     } catch (error) {
       console.error('Worker update error:', error);
+      
+      // Handle different types of errors
+      if (error instanceof Error) {
+        // Set API error for display in the form
+        setApiError(error.message);
+        
+        // Try to extract more specific field errors if available
+        const errorData = (error as any).response?.data;
+        if (errorData?.errors) {
+          // If the API returns field-specific errors, set them on the form
+          Object.entries(errorData.errors).forEach(([field, message]) => {
+            if (field in form.getValues()) {
+              form.setError(field as any, {
+                type: 'manual',
+                message: Array.isArray(message) ? message[0] : message as string
+              });
+            }
+          });
+        }
+      }
+      
       toast({
-        title: 'Error',
-        description: `Failed to update worker: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        title: 'Error Updating Worker',
+        description: error instanceof Error 
+          ? error.message 
+          : 'An unexpected error occurred. Please try again.',
         variant: 'destructive',
       });
     }
@@ -175,6 +213,27 @@ export default function EditWorkerDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* API Error Alert */}
+            {apiError && (
+              <div className="bg-destructive/15 p-4 rounded-md border border-destructive mb-4">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 text-destructive mt-0.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10"/>
+                      <line x1="12" y1="8" x2="12" y2="12"/>
+                      <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-destructive">Error updating worker</h3>
+                    <div className="mt-1 text-sm text-destructive/90">
+                      {apiError}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             <Accordion type="multiple" defaultValue={["basic", "contact", "employment", "status"]} className="w-full space-y-4">
               {/* Basic Information */}
               <AccordionItem value="basic" className="border rounded-lg overflow-hidden shadow-sm">
@@ -280,11 +339,11 @@ export default function EditWorkerDialog({
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="male">Male</SelectItem>
-                              <SelectItem value="female">Female</SelectItem>
-                              <SelectItem value="non_binary">Non-binary</SelectItem>
-                              <SelectItem value="other">Other</SelectItem>
-                              <SelectItem value="prefer_not_say">Prefer not to say</SelectItem>
+                              {GENDER_OPTIONS.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -318,7 +377,7 @@ export default function EditWorkerDialog({
                         onChange={(e) => setTagInput(e.target.value)}
                         onKeyDown={handleAddTag}
                       />
-                      <FormDescription>
+                      <FormDescription className="text-xs text-muted-foreground mt-2">
                         Press Enter to add multiple tags
                       </FormDescription>
                     </div>
@@ -401,7 +460,23 @@ export default function EditWorkerDialog({
                         <FormItem>
                           <FormLabel>State*</FormLabel>
                           <FormControl>
-                            <Input placeholder="Maharashtra" {...field} />
+                            <Select
+                              onValueChange={(value) => field.onChange(value)}
+                              value={field.value || ''}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Select state" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {LOCATION_STATE_OPTIONS.map((option) => (
+                                  <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -416,7 +491,23 @@ export default function EditWorkerDialog({
                         <FormItem>
                           <FormLabel>Country*</FormLabel>
                           <FormControl>
-                            <Input placeholder="India" defaultValue="India" {...field} />
+                            <Select
+                              onValueChange={(value) => field.onChange(value)}
+                              value={field.value || 'IN'}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Select country" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {LOCATION_COUNTRY_OPTIONS.map((option) => (
+                                  <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -439,15 +530,11 @@ export default function EditWorkerDialog({
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="en-IN">English</SelectItem>
-                              <SelectItem value="hi">Hindi</SelectItem>
-                              <SelectItem value="mr">Marathi</SelectItem>
-                              <SelectItem value="gu">Gujarati</SelectItem>
-                              <SelectItem value="bn">Bengali</SelectItem>
-                              <SelectItem value="ta">Tamil</SelectItem>
-                              <SelectItem value="te">Telugu</SelectItem>
-                              <SelectItem value="kn">Kannada</SelectItem>
-                              <SelectItem value="ml">Malayalam</SelectItem>
+                              {PREFERRED_LANGUAGE_OPTIONS.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -471,10 +558,11 @@ export default function EditWorkerDialog({
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="opted_in">Opted In</SelectItem>
-                              <SelectItem value="opted_out">Opted Out</SelectItem>
-                              <SelectItem value="pending">Pending</SelectItem>
-                              <SelectItem value="failed">Failed</SelectItem>
+                              {WHATSAPP_OPTIN_OPTIONS.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -502,7 +590,23 @@ export default function EditWorkerDialog({
                         <FormItem>
                           <FormLabel>Job Title</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter job title" {...field} />
+                            <Select
+                              onValueChange={(value) => field.onChange(value)}
+                              value={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Select job title" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {JOB_TITLE_OPTIONS.map((option) => (
+                                  <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -516,7 +620,23 @@ export default function EditWorkerDialog({
                         <FormItem>
                           <FormLabel>Department</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter department" {...field} />
+                            <Select
+                              onValueChange={(value) => field.onChange(value)}
+                              value={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Select department" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {DEPARTMENT_OPTIONS.map((option) => (
+                                  <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -576,10 +696,11 @@ export default function EditWorkerDialog({
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="full_time">Full Time</SelectItem>
-                              <SelectItem value="part_time">Part Time</SelectItem>
-                              <SelectItem value="contractor">Contractor</SelectItem>
-                              <SelectItem value="temporary">Temporary</SelectItem>
+                              {EMPLOYMENT_TYPE_OPTIONS.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -638,10 +759,11 @@ export default function EditWorkerDialog({
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="active">Active</SelectItem>
-                              <SelectItem value="inactive">Inactive</SelectItem>
-                              <SelectItem value="on_leave">On Leave</SelectItem>
-                              <SelectItem value="terminated">Terminated</SelectItem>
+                              {EMPLOYMENT_STATUS_OPTIONS.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -666,13 +788,11 @@ export default function EditWorkerDialog({
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="voluntary_resignation">Voluntary Resignation</SelectItem>
-                                <SelectItem value="performance_issues">Performance Issues</SelectItem>
-                                <SelectItem value="policy_violation">Policy Violation</SelectItem>
-                                <SelectItem value="redundancy">Redundancy</SelectItem>
-                                <SelectItem value="retirement">Retirement</SelectItem>
-                                <SelectItem value="end_of_contract">End of Contract</SelectItem>
-                                <SelectItem value="other">Other</SelectItem>
+                                {DEACTIVATION_REASON_OPTIONS.map((option) => (
+                                  <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
                             <FormMessage />

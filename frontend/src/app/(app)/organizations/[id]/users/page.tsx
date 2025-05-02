@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useUsers } from '@/hooks/api/use-users';
 import { Button } from '@/components/ui/button';
@@ -45,18 +45,13 @@ export default function OrganizationUsersPage() {
     limit: 10,
   });
   const router = useRouter();
-  const [initialLoadingComplete, setInitialLoadingComplete] = useState(false);
-  const { data, isLoading, refetch } = useUsers(filters);
+  
+  // Fetch users with React Query
+  const { data, isLoading, refetch, isFetched } = useUsers(filters);
   
   const users = data?.data?.users || [];
   const total = data?.data?.total || 0;
   const totalPages = Math.ceil(total / (filters.limit || 10));
-
-  useEffect(() => {
-    if (!isLoading && !initialLoadingComplete) {
-      setInitialLoadingComplete(true);
-    }
-  }, [isLoading, initialLoadingComplete]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -252,9 +247,9 @@ export default function OrganizationUsersPage() {
           </PaginationContent>
         </Pagination>
       )}
-      
-      <UserInviteDialog 
-        open={isInviteDialogOpen} 
+
+      <UserInviteDialog
+        open={isInviteDialogOpen}
         onOpenChange={setIsInviteDialogOpen}
         organizationId={organizationId}
       />

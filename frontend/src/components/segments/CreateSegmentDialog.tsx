@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -88,30 +88,29 @@ export default function CreateSegmentDialog({
   // Get current form values
   const segmentType = form.watch('type');
   
-  // Reset rule state when dialog opens/closes
-  useEffect(() => {
-    if (open) {
+  // Function to count conditions in a rule
+  const countConditions = (rule: SegmentRule): number => {
+    return rule.conditions.reduce((count, condition) => {
+      if ('type' in condition) {
+        return count + countConditions(condition as SegmentRule);
+      }
+      return count + 1;
+    }, 0);
+  };
+  
+  // Handle dialog open/close
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      onClose();
+    } else {
+      // Reset states when dialog opens (replaces the first useEffect)
       setRuleDefinition(createEmptyRule());
       setIsRuleValid(true);
       setRuleError(null);
       setTestResult(null);
       setHasRuleConditions(false);
     }
-  }, [open]);
-  
-  // Update hasRuleConditions when rule changes
-  useEffect(() => {
-    const countConditions = (rule: SegmentRule): number => {
-      return rule.conditions.reduce((count, condition) => {
-        if ('type' in condition) {
-          return count + countConditions(condition as SegmentRule);
-        }
-        return count + 1;
-      }, 0);
-    };
-    
-    setHasRuleConditions(countConditions(ruleDefinition) > 0);
-  }, [ruleDefinition]);
+  };
 
   // Handle rule updates from RuleBuilder
   const handleRuleChange = (updatedRule: SegmentRule) => {
@@ -119,6 +118,9 @@ export default function CreateSegmentDialog({
     setIsRuleValid(true); // Reset validation
     setRuleError(null);
     setTestResult(null); // Clear test results when rule changes
+    
+    // Update hasRuleConditions (replaces the second useEffect)
+    setHasRuleConditions(countConditions(updatedRule) > 0);
   };
   
   // Test the current rule against workers
@@ -194,7 +196,7 @@ export default function CreateSegmentDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className={segmentType === 'rule_based' ? "sm:max-w-[800px] max-h-[90vh] overflow-y-auto" : "sm:max-w-[500px]"}>
         <DialogHeader>
           <DialogTitle>Create New Segment</DialogTitle>

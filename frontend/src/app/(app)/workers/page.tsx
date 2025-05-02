@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { PlusCircle, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
@@ -12,6 +12,25 @@ import { useToast } from '@/components/ui/toast';
 import CreateWorkerDialog from '@/components/workers/CreateWorkerDialog';
 import { useAdminType } from '@/lib/permission';
 
+// Simple redirect component without useEffect
+function RedirectToDashboard() {
+  const router = useRouter();
+  const { toast } = useToast();
+  
+  // Show toast
+  toast({
+    title: 'Access Denied',
+    description: 'Platform administrators do not have access to worker management',
+    variant: 'destructive',
+  });
+  
+  // Perform redirect
+  router.push('/dashboard');
+  
+  // Return null while redirecting
+  return null;
+}
+
 export default function WorkersPage() {
   const router = useRouter();
   const { toast } = useToast();
@@ -21,21 +40,9 @@ export default function WorkersPage() {
   const [filters, setFilters] = useState<WorkerFilterOptions>({});
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   
-  // Redirect platform admins to the dashboard
-  useEffect(() => {
-    if (isPlatformAdmin) {
-      toast({
-        title: 'Access Denied',
-        description: 'Platform administrators do not have access to worker management',
-        variant: 'destructive',
-      });
-      router.push('/dashboard');
-    }
-  }, [isPlatformAdmin, router, toast]);
-  
-  // If the user is a platform admin, don't render anything while redirecting
+  // If the user is a platform admin, redirect to dashboard
   if (isPlatformAdmin) {
-    return null;
+    return <RedirectToDashboard />;
   }
   
   // Fetch workers

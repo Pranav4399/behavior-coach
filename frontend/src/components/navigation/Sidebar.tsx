@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
@@ -21,19 +21,14 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const { isAuthenticated, user } = useAuth();
   const isAdmin = useIsAdmin();
   const isPlatformAdmin = usePlatformAdmin();
-  const [orgName, setOrgName] = useState('My Organization');
   
   // Fetch organization details if user is authenticated and has an organizationId
   const { data: orgData, isLoading } = user?.organizationId 
     ? useOrganization(user.organizationId)
     : { data: undefined, isLoading: false };
 
-  // Update organization name when data is loaded
-  useEffect(() => {
-    if (orgData?.data?.organization?.name) {
-      setOrgName(orgData.data.organization.name);
-    }
-  }, [orgData]);
+  // Derive organization name directly from the data
+  const orgName = orgData?.data?.organization?.name || 'My Organization';
   
   // Filter navigation items based on authentication and admin status
   const filteredNavigation = navigationItems.filter(item => 

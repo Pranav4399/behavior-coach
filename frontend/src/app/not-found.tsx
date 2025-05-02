@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -31,21 +31,18 @@ const FACTS_ABOUT_404 = [
   "The first 404 error in history was displayed in CERN's HTTP server software.",
 ];
 
+// Utility functions to get random items from arrays
+const getRandomItem = <T,>(array: T[]): T => {
+  return array[Math.floor(Math.random() * array.length)];
+};
+
 export default function NotFoundPage() {
   const router = useRouter();
-  const [message, setMessage] = useState("");
-  const [fact, setFact] = useState("");
+  const [message, setMessage] = useState(getRandomItem(WITTY_MESSAGES));
+  const [fact, setFact] = useState(getRandomItem(FACTS_ABOUT_404));
   const [isSpinning, setIsSpinning] = useState(false);
   const [searchAttempts, setSearchAttempts] = useState(0);
   const [inputText, setInputText] = useState("");
-
-  // Set random message and fact on load
-  useEffect(() => {
-    const randomMessage = WITTY_MESSAGES[Math.floor(Math.random() * WITTY_MESSAGES.length)];
-    const randomFact = FACTS_ABOUT_404[Math.floor(Math.random() * FACTS_ABOUT_404.length)];
-    setMessage(randomMessage);
-    setFact(randomFact);
-  }, []);
 
   // Handle the "Try Again" button
   const handleTryAgain = () => {
@@ -53,10 +50,8 @@ export default function NotFoundPage() {
     
     // After a short delay, change the message and fact
     setTimeout(() => {
-      const newMessage = WITTY_MESSAGES[Math.floor(Math.random() * WITTY_MESSAGES.length)];
-      const newFact = FACTS_ABOUT_404[Math.floor(Math.random() * FACTS_ABOUT_404.length)];
-      setMessage(newMessage);
-      setFact(newFact);
+      setMessage(getRandomItem(WITTY_MESSAGES));
+      setFact(getRandomItem(FACTS_ABOUT_404));
       setIsSpinning(false);
     }, 800);
   };
