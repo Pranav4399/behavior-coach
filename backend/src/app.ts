@@ -14,7 +14,12 @@ import { userRoutes } from './domains/user/routes/userRoutes';
 import roleRoutes from './domains/roles/routes/roleRoutes';
 import { workerRoutes, workerCsvRoutes, workerSegmentRoutes } from './domains/workers/routes';
 import { segmentRoutes } from './domains/segments/routes';
+import mediaAssetRoutes from './domains/mediaAsset/routes/mediaAsset.routes';
+import contentRoutes from './domains/content/routes/content.routes';
+import metricsRoutes from './common/routes/metrics.routes';
 import { ENV } from './config/env';
+import uploadsRoutes from './common/routes/uploads.routes';
+import { InitializationService } from './common/services/init.service';
 
 // Initialize express app
 const app: Express = express();
@@ -124,6 +129,11 @@ if (process.env.NODE_ENV !== 'production') {
 
 // #endregion
 
+// Initialize services (like LocalStack S3 bucket)
+InitializationService.initializeServices().catch(error => {
+  console.error('Failed to initialize services:', error);
+});
+
 // Routes
 app.use('/', indexRoutes);
 app.use('/api/auth', authRoutes);
@@ -135,6 +145,10 @@ app.use('/api/workers', workerRoutes);
 app.use('/api/workers/csv', workerCsvRoutes);
 app.use('/api/workers', workerSegmentRoutes);
 app.use('/api/segments', segmentRoutes);
+app.use('/api/uploads', uploadsRoutes);
+app.use('/api/media', mediaAssetRoutes);
+app.use('/api/content', contentRoutes);
+app.use('/api', metricsRoutes);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
 
 // 404 handler

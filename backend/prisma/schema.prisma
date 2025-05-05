@@ -37,6 +37,10 @@ model Organization {
   integrations    Integration[]
   workers         Worker[]        // Relation to Worker
   segments        Segment[]       // Relation to Segment
+  contents        Content[]
+  mediaAssets     MediaAsset[]
+  tags            Tag[]
+  collections     Collection[]
 
   @@map("organizations")
 }
@@ -65,6 +69,13 @@ model User {
   // Relation to segments (for created/modified by)
   createdSegments Segment[] @relation("CreatedBy")
   updatedSegments Segment[] @relation("UpdatedBy")
+
+  // Content relations
+  createdContents    Content[]      @relation("ContentCreatedBy")
+  updatedContents    Content[]      @relation("ContentUpdatedBy")
+  mediaUploads       MediaAsset[]
+  contentVersions    ContentVersion[]
+  collections        Collection[]
 
   @@map("users")
 }
@@ -390,4 +401,312 @@ model SegmentSyncJob {
   @@map("segment_sync_jobs")
   @@index([segmentId])
   @@index([status])
+}
+
+// Content-related enums
+enum ContentStatus {
+  draft
+  review
+  approved
+  published
+  archived
+}
+
+enum ContentType {
+  text
+  image
+  video
+  audio
+  document
+  quiz
+  reflection
+  template
+}
+
+enum MediaType {
+  image
+  video
+  audio
+  document
+}
+
+// Content Model - Base table with common fields
+model Content {
+  id                 String         @id @default(uuid())
+  title              String
+  description        String?
+  status             ContentStatus  @default(draft)
+  type               ContentType
+  createdAt          DateTime       @default(now()) @map("created_at")
+  updatedAt          DateTime       @updatedAt @map("updated_at")
+  
+  // Organization relation
+  organizationId     String         @map("organization_id")
+  organization       Organization   @relation(fields: [organizationId], references: [id])
+  
+  // Creator relation
+  createdById        String?        @map("created_by_id")
+  createdBy          User?          @relation("ContentCreatedBy", fields: [createdById], references: [id])
+  
+  // Last editor relation
+  updatedById        String?        @map("updated_by_id")
+  updatedBy          User?          @relation("ContentUpdatedBy", fields: [updatedById], references: [id])
+  
+  // Versioning relation
+  versions           ContentVersion[]
+  
+  // Content type relations
+  textContent        TextContent?
+  imageContent       ImageContent?
+  videoContent       VideoContent?
+  audioContent       AudioContent?
+  documentContent    DocumentContent?
+  quizContent        QuizContent?
+  reflectionContent  ReflectionContent?
+  templateContent    TemplateContent?
+  
+  // Content tag relation
+  contentTags        ContentTag[]
+  
+  // Content collection relation
+  collectionItems    CollectionItem[]
+  
+  @@map("contents")
+  @@index([organizationId])
+  @@index([status])
+  @@index([type])
+  @@index([createdById])
+  @@index([updatedById])
+}
+
+// Text Content type
+model TextContent {
+  id                 String         @id @default(uuid())
+  contentId          String         @unique @map("content_id")
+  content            Content        @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  text               String         @db.Text // Full text content
+  formatting         Json?          // Optional formatting data (markup, styling)
+  
+  @@map("text_contents")
+}
+
+// Image Content type
+model ImageContent {
+  id                 String         @id @default(uuid())
+  contentId          String         @unique @map("content_id")
+  content            Content        @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  mediaAssetId       String         @map("media_asset_id")
+  mediaAsset         MediaAsset     @relation(fields: [mediaAssetId], references: [id])
+  altText            String?        @map("alt_text")
+  caption            String?
+  
+  @@map("image_contents")
+  @@index([mediaAssetId])
+}
+
+// Video Content type
+model VideoContent {
+  id                 String         @id @default(uuid())
+  contentId          String         @unique @map("content_id")
+  content            Content        @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  mediaAssetId       String         @map("media_asset_id")
+  mediaAsset         MediaAsset     @relation(fields: [mediaAssetId], references: [id])
+  caption            String?
+  transcript         String?        @db.Text
+  duration           Int?           // Duration in seconds
+  
+  @@map("video_contents")
+  @@index([mediaAssetId])
+}
+
+// Audio Content type
+model AudioContent {
+  id                 String         @id @default(uuid())
+  contentId          String         @unique @map("content_id")
+  content            Content        @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  mediaAssetId       String         @map("media_asset_id")
+  mediaAsset         MediaAsset     @relation(fields: [mediaAssetId], references: [id])
+  caption            String?
+  transcript         String?        @db.Text
+  duration           Int?           // Duration in seconds
+  
+  @@map("audio_contents")
+  @@index([mediaAssetId])
+}
+
+// Document Content type
+model DocumentContent {
+  id                 String         @id @default(uuid())
+  contentId          String         @unique @map("content_id")
+  content            Content        @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  mediaAssetId       String         @map("media_asset_id")
+  mediaAsset         MediaAsset     @relation(fields: [mediaAssetId], references: [id])
+  description        String?
+  
+  @@map("document_contents")
+  @@index([mediaAssetId])
+}
+
+// Quiz Content type
+model QuizContent {
+  id                 String         @id @default(uuid())
+  contentId          String         @unique @map("content_id")
+  content            Content        @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  questions          Json           // Array of questions with options and correct answers
+  scoringType        String?        @map("scoring_type") // How quiz is scored
+  timeLimit          Int?           @map("time_limit") // Time limit in seconds, if applicable
+  
+  @@map("quiz_contents")
+}
+
+// Reflection Content type
+model ReflectionContent {
+  id                 String         @id @default(uuid())
+  contentId          String         @unique @map("content_id")
+  content            Content        @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  promptText         String         @map("prompt_text") @db.Text // The reflection prompt
+  guidanceText       String?        @map("guidance_text") @db.Text // Optional guidance for reflection
+  
+  @@map("reflection_contents")
+}
+
+// Template Content type
+model TemplateContent {
+  id                 String         @id @default(uuid())
+  contentId          String         @unique @map("content_id")
+  content            Content        @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  templateText       String         @map("template_text") @db.Text // Template with variables
+  variables          Json           // Defined variables with descriptions
+  channel            String         // Target channel (whatsapp, sms, email)
+  approvalStatus     String?        @map("approval_status") // External approval status (for WhatsApp HSM)
+  
+  @@map("template_contents")
+  @@index([channel])
+  @@index([approvalStatus])
+}
+
+// Media Asset model
+model MediaAsset {
+  id                 String         @id @default(uuid())
+  fileName           String         @map("file_name")
+  fileSize           Int            @map("file_size") // Size in bytes
+  mimeType           String         @map("mime_type")
+  type               MediaType
+  url                String         // Storage URL
+  thumbnailUrl       String?        @map("thumbnail_url") // Thumbnail URL for previews
+  altText            String?        @map("alt_text")
+  metadata           Json?          // Additional metadata (dimensions, duration, etc.)
+  createdAt          DateTime       @default(now()) @map("created_at")
+  updatedAt          DateTime       @updatedAt @map("updated_at")
+  
+  // Organization relation
+  organizationId     String         @map("organization_id")
+  organization       Organization   @relation(fields: [organizationId], references: [id])
+  
+  // Uploader relation
+  uploadedById       String?        @map("uploaded_by_id")
+  uploadedBy         User?          @relation(fields: [uploadedById], references: [id])
+  
+  // Content relations
+  imageContents      ImageContent[]
+  videoContents      VideoContent[]
+  audioContents      AudioContent[]
+  documentContents   DocumentContent[]
+  
+  @@map("media_assets")
+  @@index([organizationId])
+  @@index([type])
+  @@index([uploadedById])
+}
+
+// Content Version model
+model ContentVersion {
+  id                 String         @id @default(uuid())
+  contentId          String         @map("content_id")
+  content            Content        @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  versionNumber      Int            @map("version_number")
+  versionData        Json           // Full copy of content at this version
+  changeNote         String?        @map("change_note") // Description of changes in this version
+  createdAt          DateTime       @default(now()) @map("created_at")
+  
+  // Creator relation
+  createdById        String?        @map("created_by_id")
+  createdBy          User?          @relation(fields: [createdById], references: [id])
+  
+  @@map("content_versions")
+  @@index([contentId])
+  @@index([versionNumber])
+  @@index([createdById])
+}
+
+// Tag model
+model Tag {
+  id                 String         @id @default(uuid())
+  name               String
+  color              String?        // Optional color for UI display
+  
+  // Organization relation
+  organizationId     String         @map("organization_id")
+  organization       Organization   @relation(fields: [organizationId], references: [id])
+  
+  // Content tag relation
+  contentTags        ContentTag[]
+  
+  @@unique([name, organizationId]) // Tags must be unique within an organization
+  @@map("tags")
+  @@index([organizationId])
+}
+
+// Content-Tag relationship model
+model ContentTag {
+  id                 String         @id @default(uuid())
+  contentId          String         @map("content_id")
+  content            Content        @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  tagId              String         @map("tag_id")
+  tag                Tag            @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  
+  @@unique([contentId, tagId]) // A content can have a specific tag only once
+  @@map("content_tags")
+  @@index([contentId])
+  @@index([tagId])
+}
+
+// Collection model for organizing content
+model Collection {
+  id                 String         @id @default(uuid())
+  name               String
+  description        String?
+  createdAt          DateTime       @default(now()) @map("created_at")
+  updatedAt          DateTime       @updatedAt @map("updated_at")
+  
+  // Organization relation
+  organizationId     String         @map("organization_id")
+  organization       Organization   @relation(fields: [organizationId], references: [id])
+  
+  // Creator relation
+  createdById        String?        @map("created_by_id")
+  createdBy          User?          @relation(fields: [createdById], references: [id])
+  
+  // Collection items relation
+  items              CollectionItem[]
+  
+  @@map("collections")
+  @@index([organizationId])
+  @@index([createdById])
+}
+
+// Collection Item model for content in collections
+model CollectionItem {
+  id                 String         @id @default(uuid())
+  collectionId       String         @map("collection_id")
+  collection         Collection     @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  contentId          String         @map("content_id")
+  content            Content        @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  order              Int            // Order within collection
+  addedAt            DateTime       @default(now()) @map("added_at")
+  
+  @@unique([collectionId, contentId]) // A content can appear only once in a collection
+  @@map("collection_items")
+  @@index([collectionId])
+  @@index([contentId])
 }

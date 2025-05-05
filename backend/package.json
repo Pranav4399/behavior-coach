@@ -14,7 +14,11 @@
     "db:docs": "tsx scripts/generate-db-docs.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "db:deploy": "npx prisma migrate deploy && npx prisma generate",
-    "dev:nodemon": "nodemon --exec 'tsx' server.ts --ext ts,js,json"
+    "dev:nodemon": "nodemon --exec 'tsx' server.ts --ext ts,js,json",
+    "localstack:setup": "bash scripts/setup-localstack.sh",
+    "localstack:start": "docker-compose up -d localstack",
+    "localstack:stop": "docker-compose stop localstack",
+    "localstack:logs": "docker-compose logs -f localstack"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -24,6 +28,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.538.0",
+    "@aws-sdk/s3-request-presigner": "^3.538.0",
     "@prisma/client": "^6.6.0",
     "@types/multer": "^1.4.12",
     "@types/nodemailer": "^6.4.17",
@@ -40,7 +46,8 @@
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.2",
     "nodemailer": "^6.10.1",
-    "prisma": "^6.6.0"
+    "prisma": "^6.6.0",
+    "sharp": "^0.34.1"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
@@ -51,6 +58,7 @@
     "@types/node": "^22.15.3",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
+    "@types/uuid": "^9.0.8",
     "nodemon": "^3.1.9",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",

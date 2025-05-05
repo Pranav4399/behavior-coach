@@ -11,12 +11,15 @@ A Node.js backend API for the Behavioral Coach application built with Express, T
 - Environment variable management
 - Error handling middleware
 - Security features (helmet, rate limiting, etc.)
+- LocalStack integration for S3 file storage (local development)
+- AWS S3 support for production
 
 ## Requirements
 
 - Node.js (v14 or higher)
 - PostgreSQL database
 - npm or yarn
+- Docker and Docker Compose (for LocalStack)
 
 ## Getting Started
 
@@ -57,7 +60,21 @@ Generate the Prisma client:
 npm run db:generate
 ```
 
-### 5. Start the development server
+### 5. Set up LocalStack for S3 (optional)
+
+If you want to use S3 functionality locally without an AWS account:
+
+```bash
+# Install and configure LocalStack
+npm run localstack:setup
+
+# Start LocalStack
+npm run localstack:start
+```
+
+For more details, see [S3 Setup Documentation](./docs/s3-setup.md).
+
+### 6. Start the development server
 
 ```bash
 npm run dev
@@ -75,6 +92,10 @@ The server will start at http://localhost:3000. Visit http://localhost:3000/api-
 - `npm run db:generate` - Generate Prisma client
 - `npm run db:studio` - Open Prisma Studio to view and edit data
 - `npm run db:seed` - Seed the database with initial data
+- `npm run localstack:setup` - Set up LocalStack for S3
+- `npm run localstack:start` - Start LocalStack container
+- `npm run localstack:stop` - Stop LocalStack container
+- `npm run localstack:logs` - View LocalStack logs
 
 ## API Documentation
 
@@ -87,19 +108,34 @@ backend/
 ├── prisma/             # Prisma schema and migrations
 ├── src/
 │   ├── config/         # Configuration files
-│   ├── controllers/    # Route controllers
-│   ├── middleware/     # Express middleware
-│   ├── routes/         # API routes
-│   ├── services/       # Business logic
-│   ├── utils/          # Utility functions
+│   ├── common/         # Shared code
+│   │   ├── controllers/  # Common controllers
+│   │   ├── middleware/   # Express middleware
+│   │   ├── routes/       # Common routes
+│   │   └── services/     # Common services (includes S3)
+│   ├── domains/        # Domain-specific modules
+│   │   ├── auth/         # Authentication
+│   │   ├── users/        # User management
+│   │   └── ...           # Other domains
 │   ├── app.ts          # Express app setup
 │   └── server.ts       # Server entry point
-├── .env                # Environment variables
-├── .gitignore          # Git ignore file
-├── package.json        # Project dependencies
-├── tsconfig.json       # TypeScript configuration
-└── README.md           # Project documentation
+├── docs/              # Documentation
+├── scripts/           # Utility scripts
+├── .env               # Environment variables
+├── .gitignore         # Git ignore file
+├── package.json       # Project dependencies
+├── tsconfig.json      # TypeScript configuration
+└── README.md          # Project documentation
 ```
+
+## File Storage
+
+The application uses an S3-compatible storage system:
+
+- In development: LocalStack mocks AWS S3 locally
+- In production: AWS S3 
+
+See [S3 Setup Documentation](./docs/s3-setup.md) for more details on setup and usage.
 
 ## Authentication
 

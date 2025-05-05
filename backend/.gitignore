@@ -41,6 +41,10 @@ yarn-error.log*
 generated
 dist/generated/
 
+# LocalStack
+volume
+
+
 # Docker
 docker-compose.override.yml
 
