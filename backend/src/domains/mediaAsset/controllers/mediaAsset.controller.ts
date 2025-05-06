@@ -21,8 +21,10 @@ export class MediaAssetController {
    */
   getMediaAssets = async (req: Request, res: Response): Promise<void> => {
     try {
+      const organizationId = req.query.organizationId as string;
+      
       const options: MediaAssetFilterOptions = {
-        organizationId: req.params.organizationId || req.query.organizationId as string,
+        organizationId,
         uploadedById: req.query.uploadedById as string,
         search: req.query.search as string,
         type: req.query.type as any,
@@ -114,7 +116,7 @@ export class MediaAssetController {
         return;
       }
 
-      const organizationId = req.params.organizationId || req.body.organizationId;
+      const organizationId = req.body.organizationId;
       
       if (!organizationId) {
         res.status(400).json({
@@ -299,7 +301,7 @@ export class MediaAssetController {
   getPresignedUrl = async (req: Request, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
-      const organizationId = req.params.organizationId;
+      const organizationId = req.query.organizationId as string;
       
       if (!id) {
         res.status(400).json({

@@ -4,7 +4,8 @@ import {
   Settings,
   Users,
   Layers,
-  Puzzle
+  Puzzle,
+  Library
 } from 'lucide-react';
 
 export interface NavigationItem {
@@ -18,6 +19,7 @@ export interface NavigationItem {
 
 export const navigationItems: NavigationItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, requiresAuth: true },
+  { name: 'Content', href: '/content', icon: Library, requiresAuth: true },
   { name: 'Organizations', href: '/organizations', icon: Building2, requiresAuth: true },
   { name: 'Workers', href: '/workers', icon: Users, requiresAuth: true, hidePlatformAdmin: true },
   { name: 'Segments', href: '/segments', icon: Layers, requiresAuth: true, hidePlatformAdmin: true },

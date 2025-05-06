@@ -17,13 +17,69 @@ const mediaAssetController = new MediaAssetController();
 
 /**
  * @swagger
- * /api/organizations/{organizationId}/media:
+ * components:
+ *   schemas:
+ *     MediaAsset:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           description: Unique identifier for the media asset
+ *         filename:
+ *           type: string
+ *           description: Original filename
+ *         key:
+ *           type: string
+ *           description: Storage key in S3
+ *         mimeType:
+ *           type: string
+ *           description: MIME type of the file
+ *         size:
+ *           type: integer
+ *           description: File size in bytes
+ *         type:
+ *           type: string
+ *           enum: [image, video, audio, document]
+ *           description: Media type
+ *         altText:
+ *           type: string
+ *           description: Alternative text for accessibility
+ *         metadata:
+ *           type: object
+ *           description: Additional metadata
+ *         organizationId:
+ *           type: string
+ *           description: Organization this media belongs to
+ *         uploadedById:
+ *           type: string
+ *           description: User who uploaded this media
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           description: Creation timestamp
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           description: Last update timestamp
+ */
+
+/**
+ * @swagger
+ * tags:
+ *   name: Media
+ *   description: Media asset management endpoints
+ */
+
+/**
+ * @swagger
+ * /api/media:
  *   get:
+ *     tags: [Media]
  *     summary: Get all media assets
  *     description: Returns a list of media assets with pagination and filtering
  *     parameters:
  *       - name: organizationId
- *         in: path
+ *         in: query
  *         required: true
  *         schema:
  *           type: string
@@ -56,12 +112,13 @@ const mediaAssetController = new MediaAssetController();
  *       401:
  *         description: Unauthorized
  */
-router.get('/organizations/:organizationId/media', authenticate, mediaAssetController.getMediaAssets);
+router.get('/', authenticate, mediaAssetController.getMediaAssets);
 
 /**
  * @swagger
  * /api/media/{id}:
  *   get:
+ *     tags: [Media]
  *     summary: Get a media asset by ID
  *     description: Returns details of a specific media asset
  *     parameters:
@@ -78,20 +135,15 @@ router.get('/organizations/:organizationId/media', authenticate, mediaAssetContr
  *       401:
  *         description: Unauthorized
  */
-router.get('/media/:id', authenticate, mediaAssetController.getMediaAssetById);
+router.get('/:id', authenticate, mediaAssetController.getMediaAssetById);
 
 /**
  * @swagger
- * /api/organizations/{organizationId}/media/upload:
+ * /api/media/upload:
  *   post:
+ *     tags: [Media]
  *     summary: Upload a new media asset
  *     description: Uploads a file and creates a new media asset record
- *     parameters:
- *       - name: organizationId
- *         in: path
- *         required: true
- *         schema:
- *           type: string
  *     requestBody:
  *       required: true
  *       content:
@@ -102,6 +154,8 @@ router.get('/media/:id', authenticate, mediaAssetController.getMediaAssetById);
  *               file:
  *                 type: string
  *                 format: binary
+ *               organizationId:
+ *                 type: string
  *               altText:
  *                 type: string
  *               metadata:
@@ -116,7 +170,7 @@ router.get('/media/:id', authenticate, mediaAssetController.getMediaAssetById);
  *         description: Unauthorized
  */
 router.post(
-  '/organizations/:organizationId/media/upload',
+  '/upload',
   authenticate,
   upload.single('file'),
   mediaAssetController.uploadMediaAsset
@@ -126,6 +180,7 @@ router.post(
  * @swagger
  * /api/media/{id}:
  *   patch:
+ *     tags: [Media]
  *     summary: Update a media asset
  *     description: Updates metadata of an existing media asset
  *     parameters:
@@ -153,12 +208,13 @@ router.post(
  *       401:
  *         description: Unauthorized
  */
-router.patch('/media/:id', authenticate, mediaAssetController.updateMediaAsset);
+router.patch('/:id', authenticate, mediaAssetController.updateMediaAsset);
 
 /**
  * @swagger
  * /api/media/{id}:
  *   delete:
+ *     tags: [Media]
  *     summary: Delete a media asset
  *     description: Deletes a media asset and its file from S3
  *     parameters:
@@ -177,12 +233,13 @@ router.patch('/media/:id', authenticate, mediaAssetController.updateMediaAsset);
  *       401:
  *         description: Unauthorized
  */
-router.delete('/media/:id', authenticate, mediaAssetController.deleteMediaAsset);
+router.delete('/:id', authenticate, mediaAssetController.deleteMediaAsset);
 
 /**
  * @swagger
  * /api/media/{id}/usage:
  *   get:
+ *     tags: [Media]
  *     summary: Get media asset usage
  *     description: Returns a list of content items using this media asset
  *     parameters:
@@ -199,12 +256,13 @@ router.delete('/media/:id', authenticate, mediaAssetController.deleteMediaAsset)
  *       401:
  *         description: Unauthorized
  */
-router.get('/media/:id/usage', authenticate, mediaAssetController.getMediaAssetUsage);
+router.get('/:id/usage', authenticate, mediaAssetController.getMediaAssetUsage);
 
 /**
  * @swagger
  * /api/media/{id}/url:
  *   get:
+ *     tags: [Media]
  *     summary: Get a pre-signed URL
  *     description: Returns a pre-signed URL for temporary access to the file
  *     parameters:
@@ -239,52 +297,6 @@ router.get('/media/:id/usage', authenticate, mediaAssetController.getMediaAssetU
  *       401:
  *         description: Unauthorized
  */
-router.get('/media/:id/url', authenticate, mediaAssetController.getPresignedUrl);
-
-/**
- * @swagger
- * /api/organizations/{organizationId}/media/{id}/url:
- *   get:
- *     summary: Get a pre-signed URL for organization media
- *     description: Returns a pre-signed URL for temporary access to an organization's media asset file
- *     parameters:
- *       - name: organizationId
- *         in: path
- *         required: true
- *         schema:
- *           type: string
- *       - name: id
- *         in: path
- *         required: true
- *         schema:
- *           type: string
- *       - name: expiresIn
- *         in: query
- *         schema:
- *           type: integer
- *           description: Expiration time in seconds (default 3600)
- *     responses:
- *       200:
- *         description: Pre-signed URL
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 presignedUrl:
- *                   type: string
- *                   description: Secure URL with expiration
- *                 expiresAt:
- *                   type: string
- *                   format: date-time
- *                   description: ISO timestamp when URL expires
- *       404:
- *         description: Media asset not found
- *       401:
- *         description: Unauthorized
- */
-router.get('/organizations/:organizationId/media/:id/url', authenticate, mediaAssetController.getPresignedUrl);
+router.get('/:id/url', authenticate, mediaAssetController.getPresignedUrl);
 
 export default router; 

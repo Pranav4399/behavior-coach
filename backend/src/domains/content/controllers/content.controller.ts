@@ -24,36 +24,49 @@ export class ContentController {
    */
   getContents = async (req: Request, res: Response): Promise<void> => {
     try {
-      const organizationId = req.params.organizationId || req.query.organizationId as string;
+      // Extract from query params instead of route params
+      const { organizationId } = req.query;
       
       if (!organizationId) {
         this.errorService.handleMissingFieldsError(res, ['organizationId']);
         return;
       }
 
-      // Parse query parameters
-      const options: ContentFilterOptions = {
-        organizationId,
-        createdById: req.query.createdById as string,
-        updatedById: req.query.updatedById as string,
-        status: req.query.status as ContentStatus,
-        type: req.query.type as ContentType,
-        search: req.query.search as string,
-        tags: req.query.tags ? (req.query.tags as string).split(',') : undefined,
-        limit: req.query.limit ? parseInt(req.query.limit as string) : 20,
-        offset: req.query.offset ? parseInt(req.query.offset as string) : 0
+      // Extract pagination and filtering parameters
+      const { type, status, search, limit, offset, createdById, updatedById, tags } = req.query;
+
+      // Create filter options object
+      const filterOptions: ContentFilterOptions = {
+        organizationId: organizationId as string,
       };
 
-      const { contents, total } = await this.contentService.getAllContent(options);
+      // Add optional filters if provided
+      if (type) filterOptions.type = type as ContentType;
+      if (status) filterOptions.status = status as ContentStatus;
+      if (search) filterOptions.search = search as string;
+      if (createdById) filterOptions.createdById = createdById as string;
+      if (updatedById) filterOptions.updatedById = updatedById as string;
+
+      // Parse tags if provided (expect comma-separated list)
+      if (tags) {
+        filterOptions.tags = (tags as string).split(',');
+      }
+
+      // Parse pagination parameters
+      if (limit) filterOptions.limit = parseInt(limit as string, 10);
+      if (offset) filterOptions.offset = parseInt(offset as string, 10);
+
+      // Get content with filtering and pagination - using correct method name
+      const result = await this.contentService.getAllContent(filterOptions);
 
       res.status(200).json({
         success: true,
-        contents,
-        total,
+        contents: result.contents,
+        total: result.total,
         pagination: {
-          limit: options.limit,
-          offset: options.offset,
-          total
+          limit: filterOptions.limit || 20,
+          offset: filterOptions.offset || 0,
+          total: result.total
         }
       });
     } catch (error) {
@@ -636,36 +649,49 @@ export class ContentController {
    */
   getContentsWithMediaDetails = async (req: Request, res: Response): Promise<void> => {
     try {
-      const organizationId = req.params.organizationId || req.query.organizationId as string;
+      // Extract from query params instead of route params
+      const { organizationId } = req.query;
       
       if (!organizationId) {
         this.errorService.handleMissingFieldsError(res, ['organizationId']);
         return;
       }
 
-      // Parse query parameters
-      const options: ContentFilterOptions = {
-        organizationId,
-        createdById: req.query.createdById as string,
-        updatedById: req.query.updatedById as string,
-        status: req.query.status as ContentStatus,
-        type: req.query.type as ContentType,
-        search: req.query.search as string,
-        tags: req.query.tags ? (req.query.tags as string).split(',') : undefined,
-        limit: req.query.limit ? parseInt(req.query.limit as string) : 20,
-        offset: req.query.offset ? parseInt(req.query.offset as string) : 0
+      // Extract pagination and filtering parameters
+      const { type, status, search, limit, offset, createdById, updatedById, tags } = req.query;
+
+      // Create filter options object
+      const filterOptions: ContentFilterOptions = {
+        organizationId: organizationId as string,
       };
 
-      const { contents, total } = await this.contentService.getAllContentWithMediaDetails(options);
+      // Add optional filters if provided
+      if (type) filterOptions.type = type as ContentType;
+      if (status) filterOptions.status = status as ContentStatus;
+      if (search) filterOptions.search = search as string;
+      if (createdById) filterOptions.createdById = createdById as string;
+      if (updatedById) filterOptions.updatedById = updatedById as string;
+
+      // Parse tags if provided (expect comma-separated list)
+      if (tags) {
+        filterOptions.tags = (tags as string).split(',');
+      }
+
+      // Parse pagination parameters
+      if (limit) filterOptions.limit = parseInt(limit as string, 10);
+      if (offset) filterOptions.offset = parseInt(offset as string, 10);
+
+      // Get content with filtering and pagination
+      const result = await this.contentService.getAllContentWithMediaDetails(filterOptions);
 
       res.status(200).json({
         success: true,
-        contents,
-        total,
+        contents: result.contents,
+        total: result.total,
         pagination: {
-          limit: options.limit,
-          offset: options.offset,
-          total
+          limit: filterOptions.limit || 20,
+          offset: filterOptions.offset || 0,
+          total: result.total
         }
       });
     } catch (error) {

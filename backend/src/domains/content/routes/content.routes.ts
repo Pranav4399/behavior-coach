@@ -7,13 +7,66 @@ const contentController = new ContentController();
 
 /**
  * @swagger
- * /api/organizations/{organizationId}/contents:
+ * components:
+ *   schemas:
+ *     Content:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           description: Unique identifier for the content
+ *         title:
+ *           type: string
+ *           description: Content title
+ *         description:
+ *           type: string
+ *           description: Content description
+ *         type:
+ *           type: string
+ *           enum: [text, image, video, audio, document, quiz, reflection, template]
+ *           description: Content type
+ *         status:
+ *           type: string
+ *           enum: [draft, published, archived]
+ *           description: Content status
+ *         organizationId:
+ *           type: string
+ *           description: Organization this content belongs to
+ *         createdById:
+ *           type: string
+ *           description: User who created this content
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           description: Creation timestamp
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           description: Last update timestamp
+ *       required:
+ *         - title
+ *         - type
+ *         - status
+ *         - organizationId
+ */
+
+/**
+ * @swagger
+ * tags:
+ *   name: Content
+ *   description: Content management endpoints
+ */
+
+/**
+ * @swagger
+ * /api/contents:
  *   get:
+ *     tags: [Content]
  *     summary: Get all content
  *     description: Returns a list of content items with pagination and filtering
  *     parameters:
  *       - name: organizationId
- *         in: path
+ *         in: query
  *         required: true
  *         schema:
  *           type: string
@@ -45,12 +98,56 @@ const contentController = new ContentController();
  *       401:
  *         description: Unauthorized
  */
-router.get('/organizations/:organizationId/contents', authenticate, contentController.getContents);
+router.get('/', authenticate, contentController.getContents);
+
+/**
+ * @swagger
+ * /api/contents/with-media:
+ *   get:
+ *     tags: [Content]
+ *     summary: Get all content with media details
+ *     description: Returns a list of content items with complete media asset information
+ *     parameters:
+ *       - name: organizationId
+ *         in: query
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - name: type
+ *         in: query
+ *         schema:
+ *           type: string
+ *       - name: status
+ *         in: query
+ *         schema:
+ *           type: string
+ *       - name: search
+ *         in: query
+ *         schema:
+ *           type: string
+ *       - name: limit
+ *         in: query
+ *         schema:
+ *           type: integer
+ *       - name: offset
+ *         in: query
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: List of content items with media details
+ *       400:
+ *         description: Invalid request parameters
+ *       401:
+ *         description: Unauthorized
+ */
+router.get('/with-media', authenticate, contentController.getContentsWithMediaDetails);
 
 /**
  * @swagger
  * /api/contents/{id}:
  *   get:
+ *     tags: [Content]
  *     summary: Get content by ID
  *     description: Returns details of a specific content item
  *     parameters:
@@ -67,12 +164,13 @@ router.get('/organizations/:organizationId/contents', authenticate, contentContr
  *       401:
  *         description: Unauthorized
  */
-router.get('/contents/:id', authenticate, contentController.getContentById);
+router.get('/:id', authenticate, contentController.getContentById);
 
 /**
  * @swagger
  * /api/contents/text:
  *   post:
+ *     tags: [Content]
  *     summary: Create text content
  *     description: Creates a new text content item
  *     requestBody:
@@ -102,12 +200,13 @@ router.get('/contents/:id', authenticate, contentController.getContentById);
  *       401:
  *         description: Unauthorized
  */
-router.post('/contents/text', authenticate, contentController.createTextContent);
+router.post('/text', authenticate, contentController.createTextContent);
 
 /**
  * @swagger
  * /api/contents/image:
  *   post:
+ *     tags: [Content]
  *     summary: Create image content
  *     description: Creates a new image content item
  *     requestBody:
@@ -139,12 +238,13 @@ router.post('/contents/text', authenticate, contentController.createTextContent)
  *       401:
  *         description: Unauthorized
  */
-router.post('/contents/image', authenticate, contentController.createImageContent);
+router.post('/image', authenticate, contentController.createImageContent);
 
 /**
  * @swagger
- * /api/contents/media:
+ * /api/contents/from-media:
  *   post:
+ *     tags: [Content]
  *     summary: Create content from media asset
  *     description: Creates appropriate content based on media asset type
  *     requestBody:
@@ -186,12 +286,13 @@ router.post('/contents/image', authenticate, contentController.createImageConten
  *       401:
  *         description: Unauthorized
  */
-router.post('/contents/from-media', authenticate, contentController.createContentFromMediaAsset);
+router.post('/from-media', authenticate, contentController.createContentFromMediaAsset);
 
 /**
  * @swagger
  * /api/contents/{id}:
  *   patch:
+ *     tags: [Content]
  *     summary: Update content
  *     description: Updates a content item's base properties
  *     parameters:
@@ -221,12 +322,13 @@ router.post('/contents/from-media', authenticate, contentController.createConten
  *       401:
  *         description: Unauthorized
  */
-router.patch('/contents/:id', authenticate, contentController.updateContent);
+router.patch('/:id', authenticate, contentController.updateContent);
 
 /**
  * @swagger
  * /api/contents/{id}/data:
  *   patch:
+ *     tags: [Content]
  *     summary: Update content type-specific data
  *     description: Updates a content item's type-specific data
  *     parameters:
@@ -249,12 +351,13 @@ router.patch('/contents/:id', authenticate, contentController.updateContent);
  *       401:
  *         description: Unauthorized
  */
-router.patch('/contents/:id/data', authenticate, contentController.updateTypeSpecificContent);
+router.patch('/:id/data', authenticate, contentController.updateTypeSpecificContent);
 
 /**
  * @swagger
  * /api/contents/{id}:
  *   delete:
+ *     tags: [Content]
  *     summary: Delete content
  *     description: Deletes a content item
  *     parameters:
@@ -271,12 +374,13 @@ router.patch('/contents/:id/data', authenticate, contentController.updateTypeSpe
  *       401:
  *         description: Unauthorized
  */
-router.delete('/contents/:id', authenticate, contentController.deleteContent);
+router.delete('/:id', authenticate, contentController.deleteContent);
 
 /**
  * @swagger
  * /api/contents/{id}/tags:
  *   post:
+ *     tags: [Content]
  *     summary: Add tags to content
  *     description: Adds tags to a content item
  *     parameters:
@@ -304,12 +408,13 @@ router.delete('/contents/:id', authenticate, contentController.deleteContent);
  *       401:
  *         description: Unauthorized
  */
-router.post('/contents/:id/tags', authenticate, contentController.addContentTags);
+router.post('/:id/tags', authenticate, contentController.addContentTags);
 
 /**
  * @swagger
  * /api/contents/{id}/tags/{tagId}:
  *   delete:
+ *     tags: [Content]
  *     summary: Remove tag from content
  *     description: Removes a tag from a content item
  *     parameters:
@@ -331,12 +436,13 @@ router.post('/contents/:id/tags', authenticate, contentController.addContentTags
  *       401:
  *         description: Unauthorized
  */
-router.delete('/contents/:id/tags/:tagId', authenticate, contentController.removeContentTag);
+router.delete('/:id/tags/:tagId', authenticate, contentController.removeContentTag);
 
 /**
  * @swagger
- * /api/tags/{tagId}/contents:
+ * /api/contents/tags/{tagId}:
  *   get:
+ *     tags: [Content]
  *     summary: Get content by tag
  *     description: Returns content items with a specific tag
  *     parameters:
@@ -379,6 +485,7 @@ router.get('/tags/:tagId/contents', authenticate, contentController.getContentBy
  * @swagger
  * /api/contents/{id}/with-media:
  *   get:
+ *     tags: [Content]
  *     summary: Get content by ID with media details
  *     description: Returns details of a specific content item including complete media asset information
  *     parameters:
@@ -395,54 +502,13 @@ router.get('/tags/:tagId/contents', authenticate, contentController.getContentBy
  *       401:
  *         description: Unauthorized
  */
-router.get('/contents/:id/with-media', authenticate, contentController.getContentWithMediaDetails);
-
-/**
- * @swagger
- * /api/organizations/{organizationId}/contents/with-media:
- *   get:
- *     summary: Get all content with media details
- *     description: Returns a list of content items with complete media asset information
- *     parameters:
- *       - name: organizationId
- *         in: path
- *         required: true
- *         schema:
- *           type: string
- *       - name: type
- *         in: query
- *         schema:
- *           type: string
- *       - name: status
- *         in: query
- *         schema:
- *           type: string
- *       - name: search
- *         in: query
- *         schema:
- *           type: string
- *       - name: limit
- *         in: query
- *         schema:
- *           type: integer
- *       - name: offset
- *         in: query
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: List of content items with media details
- *       400:
- *         description: Invalid request parameters
- *       401:
- *         description: Unauthorized
- */
-router.get('/organizations/:organizationId/contents/with-media', authenticate, contentController.getContentsWithMediaDetails);
+router.get('/:id/with-media', authenticate, contentController.getContentWithMediaDetails);
 
 /**
  * @swagger
  * /api/contents/video:
  *   post:
+ *     tags: [Content]
  *     summary: Create video content
  *     description: Creates a new video content item
  *     requestBody:
@@ -476,12 +542,13 @@ router.get('/organizations/:organizationId/contents/with-media', authenticate, c
  *       401:
  *         description: Unauthorized
  */
-router.post('/contents/video', authenticate, contentController.createVideoContent);
+router.post('/video', authenticate, contentController.createVideoContent);
 
 /**
  * @swagger
  * /api/contents/audio:
  *   post:
+ *     tags: [Content]
  *     summary: Create audio content
  *     description: Creates a new audio content item
  *     requestBody:
@@ -515,12 +582,13 @@ router.post('/contents/video', authenticate, contentController.createVideoConten
  *       401:
  *         description: Unauthorized
  */
-router.post('/contents/audio', authenticate, contentController.createAudioContent);
+router.post('/audio', authenticate, contentController.createAudioContent);
 
 /**
  * @swagger
  * /api/contents/document:
  *   post:
+ *     tags: [Content]
  *     summary: Create document content
  *     description: Creates a new document content item
  *     requestBody:
@@ -550,6 +618,6 @@ router.post('/contents/audio', authenticate, contentController.createAudioConten
  *       401:
  *         description: Unauthorized
  */
-router.post('/contents/document', authenticate, contentController.createDocumentContent);
+router.post('/document', authenticate, contentController.createDocumentContent);
 
 export default router;

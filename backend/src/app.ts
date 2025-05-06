@@ -147,7 +147,7 @@ app.use('/api/workers', workerSegmentRoutes);
 app.use('/api/segments', segmentRoutes);
 app.use('/api/uploads', uploadsRoutes);
 app.use('/api/media', mediaAssetRoutes);
-app.use('/api/content', contentRoutes);
+app.use('/api/contents', contentRoutes);
 app.use('/api', metricsRoutes);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
 
