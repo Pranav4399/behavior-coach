@@ -439,4 +439,117 @@ router.get('/contents/:id/with-media', authenticate, contentController.getConten
  */
 router.get('/organizations/:organizationId/contents/with-media', authenticate, contentController.getContentsWithMediaDetails);
 
+/**
+ * @swagger
+ * /api/contents/video:
+ *   post:
+ *     summary: Create video content
+ *     description: Creates a new video content item
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               status:
+ *                 type: string
+ *               organizationId:
+ *                 type: string
+ *               mediaAssetId:
+ *                 type: string
+ *               caption:
+ *                 type: string
+ *               transcript:
+ *                 type: string
+ *               duration:
+ *                 type: number
+ *     responses:
+ *       201:
+ *         description: Video content created successfully
+ *       400:
+ *         description: Invalid request data
+ *       401:
+ *         description: Unauthorized
+ */
+router.post('/contents/video', authenticate, contentController.createVideoContent);
+
+/**
+ * @swagger
+ * /api/contents/audio:
+ *   post:
+ *     summary: Create audio content
+ *     description: Creates a new audio content item
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               status:
+ *                 type: string
+ *               organizationId:
+ *                 type: string
+ *               mediaAssetId:
+ *                 type: string
+ *               caption:
+ *                 type: string
+ *               transcript:
+ *                 type: string
+ *               duration:
+ *                 type: number
+ *     responses:
+ *       201:
+ *         description: Audio content created successfully
+ *       400:
+ *         description: Invalid request data
+ *       401:
+ *         description: Unauthorized
+ */
+router.post('/contents/audio', authenticate, contentController.createAudioContent);
+
+/**
+ * @swagger
+ * /api/contents/document:
+ *   post:
+ *     summary: Create document content
+ *     description: Creates a new document content item
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               status:
+ *                 type: string
+ *               organizationId:
+ *                 type: string
+ *               mediaAssetId:
+ *                 type: string
+ *               documentDescription:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Document content created successfully
+ *       400:
+ *         description: Invalid request data
+ *       401:
+ *         description: Unauthorized
+ */
+router.post('/contents/document', authenticate, contentController.createDocumentContent);
+
 export default router;

@@ -189,6 +189,167 @@ export class ContentController {
   };
 
   /**
+   * Create video content
+   */
+  createVideoContent = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { 
+        title, 
+        description, 
+        status, 
+        organizationId, 
+        mediaAssetId, 
+        caption,
+        transcript,
+        duration
+      } = req.body;
+      
+      const missingFields = [];
+      if (!title) missingFields.push('title');
+      if (!mediaAssetId) missingFields.push('mediaAssetId');
+      if (!organizationId) missingFields.push('organizationId');
+      
+      if (missingFields.length > 0) {
+        this.errorService.handleMissingFieldsError(res, missingFields);
+        return;
+      }
+
+      const baseContent = {
+        title,
+        description,
+        status: status || ContentStatus.DRAFT,
+        type: ContentType.VIDEO,
+        organizationId,
+        createdById: req.user?.id
+      };
+
+      const videoContent = {
+        mediaAssetId,
+        caption,
+        transcript,
+        duration: duration ? parseInt(duration, 10) : undefined
+      };
+
+      const content = await this.contentService.createVideoContent(baseContent, videoContent);
+
+      res.status(201).json({
+        success: true,
+        message: 'Video content created successfully',
+        content
+      });
+    } catch (error) {
+      console.error('Error creating video content:', error);
+      this.errorService.handleError(res, error);
+    }
+  };
+
+  /**
+   * Create audio content
+   */
+  createAudioContent = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { 
+        title, 
+        description, 
+        status, 
+        organizationId, 
+        mediaAssetId, 
+        caption,
+        transcript,
+        duration
+      } = req.body;
+      
+      const missingFields = [];
+      if (!title) missingFields.push('title');
+      if (!mediaAssetId) missingFields.push('mediaAssetId');
+      if (!organizationId) missingFields.push('organizationId');
+      
+      if (missingFields.length > 0) {
+        this.errorService.handleMissingFieldsError(res, missingFields);
+        return;
+      }
+
+      const baseContent = {
+        title,
+        description,
+        status: status || ContentStatus.DRAFT,
+        type: ContentType.AUDIO,
+        organizationId,
+        createdById: req.user?.id
+      };
+
+      const audioContent = {
+        mediaAssetId,
+        caption,
+        transcript,
+        duration: duration ? parseInt(duration, 10) : undefined
+      };
+
+      const content = await this.contentService.createAudioContent(baseContent, audioContent);
+
+      res.status(201).json({
+        success: true,
+        message: 'Audio content created successfully',
+        content
+      });
+    } catch (error) {
+      console.error('Error creating audio content:', error);
+      this.errorService.handleError(res, error);
+    }
+  };
+
+  /**
+   * Create document content
+   */
+  createDocumentContent = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { 
+        title, 
+        description, 
+        status, 
+        organizationId, 
+        mediaAssetId, 
+        documentDescription
+      } = req.body;
+      
+      const missingFields = [];
+      if (!title) missingFields.push('title');
+      if (!mediaAssetId) missingFields.push('mediaAssetId');
+      if (!organizationId) missingFields.push('organizationId');
+      
+      if (missingFields.length > 0) {
+        this.errorService.handleMissingFieldsError(res, missingFields);
+        return;
+      }
+
+      const baseContent = {
+        title,
+        description,
+        status: status || ContentStatus.DRAFT,
+        type: ContentType.DOCUMENT,
+        organizationId,
+        createdById: req.user?.id
+      };
+
+      const documentContent = {
+        mediaAssetId,
+        description: documentDescription
+      };
+
+      const content = await this.contentService.createDocumentContent(baseContent, documentContent);
+
+      res.status(201).json({
+        success: true,
+        message: 'Document content created successfully',
+        content
+      });
+    } catch (error) {
+      console.error('Error creating document content:', error);
+      this.errorService.handleError(res, error);
+    }
+  };
+
+  /**
    * Create other content types (video, audio, document, etc.)
    * Similar methods for other content types would follow the same pattern
    * as createTextContent and createImageContent
