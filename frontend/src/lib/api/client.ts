@@ -1,4 +1,4 @@
-import { ApiError, ApiResponse } from "@/types/common";
+import { ApiError } from "@/types/common";
 import { useAuthStore } from "@/store/auth";
 import logger from "./logging";
 

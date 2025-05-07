@@ -3,7 +3,6 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ContentType } from '@/types/content';
 import { contentTypeRequiresMedia, getRequiredMediaType } from '@/types/contentMedia';
-import { MediaType } from '@/types/mediaAsset';
 
 interface ContentTypeCardProps {
   type: ContentType;

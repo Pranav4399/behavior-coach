@@ -13,9 +13,7 @@ import {
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
-import { 
-  hasAttributeOptions, 
-  getAttributeOptions,
+import {
   ATTRIBUTE_OPTIONS,
   CONTROL_CONFIG 
 } from '@/constants/rules';

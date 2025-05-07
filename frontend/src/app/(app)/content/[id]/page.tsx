@@ -6,7 +6,7 @@ import { useContent } from '@/hooks/api/use-content';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { ContentDetailView } from '@/components/content/library';
-import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 
 /**
  * Content detail page - Displays a single content item with its metadata

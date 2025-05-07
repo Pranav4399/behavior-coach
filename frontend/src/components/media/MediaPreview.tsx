@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { MediaAsset, MediaType } from '@/types/mediaAsset';
 import { cn } from '@/lib/utils';
 import { FileWarning } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
 import ImagePreviewRenderer from './renderers/ImagePreviewRenderer';
 import VideoPreviewRenderer from './renderers/VideoPreviewRenderer';
 import AudioPreviewRenderer from './renderers/AudioPreviewRenderer';

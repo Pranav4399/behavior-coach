@@ -1,9 +1,9 @@
 import React from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ThemeToggle } from '@/components/theme'
-import { Activity, AlignCenter, BarChart3, BrainCircuit, Clock, Cog, Compass, Fingerprint, Layers, LineChart, Lightbulb, MessageSquare, Puzzle, ScrollText, Sparkles, Split, Target, Users, UserCircle, Workflow } from 'lucide-react'
+import { Activity, AlignCenter, BarChart3, BrainCircuit, Compass, LineChart, Lightbulb, MessageSquare, Puzzle, Sparkles, Split, Target, Users, UserCircle, Workflow } from 'lucide-react'
 
 export default function Home() {
   return (

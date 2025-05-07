@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { ContentFilterOptions, ContentStatus, ContentType } from '@/types/content';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { Search, X } from 'lucide-react';
 import { 
   Select,
@@ -11,7 +10,6 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { capitalize } from '@/utils/common';
 

@@ -1,10 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Home, RefreshCw, Search } from 'lucide-react';
+import { Sparkles, RefreshCw, Search } from 'lucide-react';
 
 // Witty 404 messages to rotate through
 const WITTY_MESSAGES = [

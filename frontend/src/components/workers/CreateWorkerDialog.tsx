@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { format } from 'date-fns';
-import { CalendarIcon, User, PhoneCall, Briefcase, Activity } from 'lucide-react';
+import { User, PhoneCall, Briefcase, Activity } from 'lucide-react';
 import { useCreateWorker } from '@/hooks/api/use-workers';
 import { useToast } from '@/components/ui/toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -48,7 +48,6 @@ import {
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
 import { Switch } from '@/components/ui/switch';
 import {
   Select,
@@ -57,11 +56,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+
+
 import { Badge } from '@/components/ui/badge';
 
 interface CreateWorkerDialogProps {

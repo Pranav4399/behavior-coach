@@ -1,8 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
 import { Spinner } from '@/components/ui/spinner';
-import { cn } from '@/lib/utils';
 
 interface LoadingOverlayProps {
   isLoading: boolean;

@@ -5,7 +5,6 @@ import { ReactQueryProvider } from "@/lib/api/query-provider";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { AuthProvider } from '@/hooks/useAuth';
 import { LoadingProvider } from '@/hooks/useLoading';
-import { cn } from '@/lib/utils';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

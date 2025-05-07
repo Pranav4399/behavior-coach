@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
-import { PlusCircle, Trash, MessageSquare, Clock, Settings, Check, X, Info } from 'lucide-react';
+import { PlusCircle, Trash, MessageSquare, Check, X, Info } from 'lucide-react';
 import { QuizQuestion, QuizQuestionOption } from '@/types/content';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { generateUniqueId } from '@/utils/common';

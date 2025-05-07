@@ -1,9 +1,8 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { Spinner } from '@/components/ui/spinner';
-import { cn } from '@/lib/utils';
 
 /**
  * Minimal navigation loader that shows a spinner during page transitions

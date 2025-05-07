@@ -4,7 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Spinner } from '@/components/ui/spinner';
-import { ContentStatus, ContentType, ContentFormState } from '@/types/content';
+import { ContentType, ContentFormState } from '@/types/content';
 import { contentTypeRequiresMedia, getRequiredMediaType } from '@/types/contentMedia';
 import { MediaAsset } from '@/types/mediaAsset';
 

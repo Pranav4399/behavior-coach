@@ -2,13 +2,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { ApiResponse } from '@/types/common';
 import {
-  Content,
   ContentFilterOptions,
   ContentListResponse,
   ContentResponse,
   ContentStatus,
   ContentType,
-  ContentWithDetails,
   CreateContentDto,
   UpdateContentDto,
   TextContent,

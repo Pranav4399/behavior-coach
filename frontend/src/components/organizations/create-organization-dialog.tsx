@@ -27,7 +27,6 @@ import { Building2, Upload } from 'lucide-react';
 import { useCreateOrganization } from '@/hooks/api/use-organizations';
 import { toast } from 'sonner';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { DEFAULT_ORGANIZATION_SETTINGS } from '@/constants/organization';
 import { Resolver } from 'react-hook-form';
 
 const createOrganizationSchema = z.object({

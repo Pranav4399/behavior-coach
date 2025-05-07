@@ -20,13 +20,8 @@ import {
   CONDITION_OPERATOR_LABELS 
 } from '@/types/rules';
 import { SegmentCondition } from '@/types/segment';
-import { 
-  Gender, 
-  EmploymentStatus, 
-  EmploymentType, 
-  DeactivationReason,
-  OptInStatus 
-} from '@/types/worker';
+
+
 import {
   hasAttributeOptions,
   getAttributeOptions,

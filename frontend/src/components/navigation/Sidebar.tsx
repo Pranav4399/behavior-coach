@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { navigationItems, NavigationItem } from '@/config/navigation';
+import { navigationItems } from '@/config/navigation';
 import { useOrganization } from '@/hooks/api/use-organizations';
 import { useIsAdmin, usePlatformAdmin } from '@/lib/permission';
 

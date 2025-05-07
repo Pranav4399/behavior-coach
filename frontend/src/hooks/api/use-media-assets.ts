@@ -2,7 +2,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient, API_BASE_URL, getAuthToken } from '@/lib/api/client';
 import { ApiResponse } from '@/types/common';
 import {
-  MediaAsset,
   MediaAssetFilterOptions,
   MediaAssetListResponse,
   MediaAssetResponse,

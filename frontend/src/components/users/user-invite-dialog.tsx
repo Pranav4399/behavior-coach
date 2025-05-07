@@ -6,7 +6,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useInviteUser } from '@/hooks/api/use-users';
 import { useRoles } from '@/hooks/api/use-roles';
-import { InviteUserData } from '@/types/user';
 import { toast } from 'sonner';
 
 import {

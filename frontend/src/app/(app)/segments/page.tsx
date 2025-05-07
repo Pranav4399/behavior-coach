@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useSegments } from '@/hooks/api/use-segments';
 import { SegmentFilterOptions } from '@/types/segment';
 import { SegmentList, CreateSegmentDialog } from '@/components/segments';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/toast';
 import { useAdminType } from '@/lib/permission';
 

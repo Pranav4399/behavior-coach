@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useUser, useUpdateUser, useDeleteUser, useResendInvitation } from '@/hooks/api/use-users';
-import { User, UpdateUserData } from '@/types/user';
 import { Button } from '@/components/ui/button';
 import {
   Card,

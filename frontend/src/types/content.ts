@@ -4,7 +4,6 @@
  * These types mirror the backend models and provide type safety for frontend components.
  */
 
-import { MediaAsset } from './mediaAsset';
 
 /**
  * Enum for content status

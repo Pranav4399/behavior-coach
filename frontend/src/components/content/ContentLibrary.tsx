@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   Content, 
-  ContentType, 
-  ContentStatus, 
   ContentFilterOptions 
 } from '@/types/content';
 import { useContents, useDeleteContent } from '@/hooks/api/use-content';

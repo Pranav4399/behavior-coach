@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { RuleBuilderProps, createEmptyRule } from '@/types/rules';
 import RuleGroup from './RuleGroup';
 import { SegmentRule } from '@/types/segment';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 

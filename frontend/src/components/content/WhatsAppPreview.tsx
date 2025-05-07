@@ -3,7 +3,6 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Check, Clock } from 'lucide-react';
 import { 
-  Content, 
   ContentType, 
   ContentWithDetails,
   TextContent,
@@ -12,10 +11,9 @@ import {
   AudioContent,
   DocumentContent,
   ReflectionContent,
-  QuizContent,
   TemplateContent
 } from '@/types/content';
-import { MediaAsset, MediaType } from '@/types/mediaAsset';
+import { MediaAsset } from '@/types/mediaAsset';
 import { Card, CardContent } from '@/components/ui/card';
 
 export interface WhatsAppPreviewProps {

@@ -7,7 +7,7 @@ import { Loader2, User, PhoneCall, Briefcase, Activity } from 'lucide-react';
 import { useUpdateWorker } from '@/hooks/api/use-workers';
 import { useToast } from '@/components/ui/toast';
 import { useAuth } from '@/hooks/useAuth';
-import { Worker, WorkerUpdateData, Gender, OptInStatus, EmploymentStatus, EmploymentType, DeactivationReason } from '@/types/worker';
+import { Worker, WorkerUpdateData, Gender, EmploymentStatus, EmploymentType, DeactivationReason } from '@/types/worker';
 import { DatePicker } from '@/components/ui/date-picker';
 import {
   GENDER_OPTIONS,
@@ -50,7 +50,6 @@ import {
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import {
   Select,

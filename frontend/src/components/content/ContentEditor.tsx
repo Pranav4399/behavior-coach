@@ -28,7 +28,6 @@ import {
   useTemplateContent,
   useUpdateContent,
   useUpdateTypeSpecificContent,
-  useContent,
   getContent
 } from '@/hooks/api/use-content';
 import { getThumbnailUrl, formatFileSize } from '@/utils/media';

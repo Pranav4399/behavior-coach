@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useWorkers, useBulkDeleteWorkers, useBulkUpdateWorkers } from '@/hooks/api/use-workers';
 import { WorkerFilterOptions } from '@/types/worker';
 import WorkerList from '@/components/workers/WorkerList';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/toast';
 import CreateWorkerDialog from '@/components/workers/CreateWorkerDialog';
 import { useAdminType } from '@/lib/permission';

@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { format } from 'date-fns';
 import { User, PhoneCall, Briefcase, Activity } from 'lucide-react';
-import { Worker, Gender, OptInStatus, EmploymentStatus, EmploymentType, DeactivationReason } from '@/types/worker';
+import { Worker } from '@/types/worker';
 
 import {
   Dialog,
