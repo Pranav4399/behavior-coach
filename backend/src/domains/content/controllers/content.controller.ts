@@ -363,6 +363,59 @@ export class ContentController {
   };
 
   /**
+   * Create quiz content
+   */
+  createQuizContent = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { 
+        title, 
+        description, 
+        status, 
+        organizationId, 
+        questions,
+        scoringType,
+        timeLimit
+      } = req.body;
+      
+      const missingFields = [];
+      if (!title) missingFields.push('title');
+      if (!questions || !Array.isArray(questions) || questions.length === 0) missingFields.push('questions');
+      if (!organizationId) missingFields.push('organizationId');
+      
+      if (missingFields.length > 0) {
+        this.errorService.handleMissingFieldsError(res, missingFields);
+        return;
+      }
+
+      const baseContent = {
+        title,
+        description,
+        status: status || ContentStatus.DRAFT,
+        type: ContentType.QUIZ,
+        organizationId,
+        createdById: req.user?.id
+      };
+
+      const quizContent = {
+        questions,
+        scoringType: scoringType || 'standard',
+        timeLimit: timeLimit ? parseInt(timeLimit, 10) : undefined
+      };
+
+      const content = await this.contentService.createQuizContent(baseContent, quizContent);
+
+      res.status(201).json({
+        success: true,
+        message: 'Quiz content created successfully',
+        content
+      });
+    } catch (error) {
+      console.error('Error creating quiz content:', error);
+      this.errorService.handleError(res, error);
+    }
+  };
+
+  /**
    * Create other content types (video, audio, document, etc.)
    * Similar methods for other content types would follow the same pattern
    * as createTextContent and createImageContent

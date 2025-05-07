@@ -1,9 +1,18 @@
 import React from 'react';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Content, ContentStatus, ContentType } from '@/types/content';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Trash2, FileText, Video, Image as ImageIcon, AudioLines, FileQuestion } from 'lucide-react';
+import { 
+  MoreHorizontal, 
+  FileText, 
+  Video, 
+  Image as ImageIcon, 
+  AudioLines, 
+  File,
+  ClipboardList,
+  BookOpen, 
+  FileQuestion
+} from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,41 +37,80 @@ export const ContentGridItem: React.FC<ContentGridItemProps> = ({
   onDelete
 }) => {
   const router = useRouter();
+  const contentAny = content as any;
 
-  // Get the appropriate media data based on content type
+  // Get the appropriate media data based on content type - more direct approach
   const getMediaData = () => {
-    // Cast to any to access potential nested properties
-    const contentAny = content as any;
-    
     if (content.type === ContentType.IMAGE && contentAny.imageContent?.mediaAsset?.thumbnailUrl) {
       return {
         thumbnailUrl: contentAny.imageContent.mediaAsset.thumbnailUrl,
         altText: contentAny.imageContent.altText || content.title
       };
+    } else if (content.type === ContentType.VIDEO && contentAny.videoContent?.mediaAsset?.thumbnailUrl) {
+      return {
+        thumbnailUrl: contentAny.videoContent.mediaAsset.thumbnailUrl,
+        altText: content.title
+      };
+    } else if (content.type === ContentType.AUDIO && contentAny.audioContent?.mediaAsset?.thumbnailUrl) {
+      return {
+        thumbnailUrl: contentAny.audioContent.mediaAsset.thumbnailUrl,
+        altText: content.title
+      };
+    } else if (content.type === ContentType.DOCUMENT && contentAny.documentContent?.mediaAsset?.thumbnailUrl) {
+      return {
+        thumbnailUrl: contentAny.documentContent.mediaAsset.thumbnailUrl,
+        altText: content.title
+      };
     }
-    
-    // For other types, return null to use the fallback
     return null;
   };
 
   const mediaData = getMediaData();
 
-  // Get the appropriate icon based on content type
-  const getContentTypeIcon = () => {
-    switch (content.type) {
-      case ContentType.TEXT:
-        return <FileText className="h-10 w-10 text-gray-400" />;
-      case ContentType.IMAGE:
-        return <ImageIcon className="h-10 w-10 text-gray-400" />;
-      case ContentType.VIDEO:
-        return <Video className="h-10 w-10 text-gray-400" />;
-      case ContentType.AUDIO:
-        return <AudioLines className="h-10 w-10 text-gray-400" />;
-      default:
-        return <FileQuestion className="h-10 w-10 text-gray-400" />;
+  // Mapping of content types to their visual representation
+  const contentVisuals: Partial<Record<ContentType, any>> = {
+    [ContentType.TEXT]: {
+      icon: <FileText className="h-12 w-12 text-blue-500" />,
+      background: 'linear-gradient(135deg, #e6f2ff 0%, #ffffff 100%)',
+    },
+    [ContentType.IMAGE]: {
+      icon: <ImageIcon className="h-12 w-12 text-purple-500" />,
+      background: 'rgb(243 244 246)'
+    },
+    [ContentType.VIDEO]: {
+      icon: <Video className="h-12 w-12 text-red-500" />,
+      background: 'rgb(243 244 246)'
+    },
+    [ContentType.AUDIO]: {
+      icon: <AudioLines className="h-12 w-12 text-green-500" />,
+      background: 'rgb(243 244 246)'
+    },
+    [ContentType.DOCUMENT]: {
+      icon: <File className="h-12 w-12 text-orange-500" />,
+      background: 'linear-gradient(135deg, #fff6e6 0%, #ffffff 100%)'
+    },
+    [ContentType.QUIZ]: {
+      icon: <ClipboardList className="h-12 w-12 text-indigo-500" />,
+      background: 'linear-gradient(135deg, #eee6ff 0%, #ffffff 100%)',
+      preview: contentAny.quizContent?.questions && (
+        <div className="text-xs font-medium text-indigo-700 mt-1">
+          {contentAny.quizContent.questions.length} 
+          {contentAny.quizContent.questions.length === 1 ? ' Question' : ' Questions'}
+        </div>
+      )
+    },
+    [ContentType.REFLECTION]: {
+      icon: <BookOpen className="h-12 w-12 text-teal-500" />,
+      background: 'rgb(243 244 246)'
     }
   };
 
+  // Get the visual content - use default if type not in mapping
+  const visual = contentVisuals[content.type] || {
+    icon: <FileQuestion className="h-12 w-12 text-gray-500" />,
+    background: 'rgb(243 244 246)'
+  };
+  
   return (
     <div 
       key={content.id}
@@ -74,7 +122,10 @@ export const ContentGridItem: React.FC<ContentGridItemProps> = ({
       onDoubleClick={() => onSelect(content)}
     >
       {/* Content type indicator and preview */}
-      <div className="h-32 bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+      <div 
+        className="h-32 flex items-center justify-center overflow-hidden" 
+        style={{ background: visual.background, backgroundSize: 'cover' }}
+      >
         {mediaData?.thumbnailUrl ? (
           <img 
             src={mediaData.thumbnailUrl} 
@@ -82,9 +133,10 @@ export const ContentGridItem: React.FC<ContentGridItemProps> = ({
             className="object-cover w-full h-full"
           />
         ) : (
-          <div className="flex flex-col items-center justify-center">
-            {getContentTypeIcon()}
-            <div className="text-xs text-gray-500 mt-2 capitalize">{content.type}</div>
+          <div className="flex flex-col items-center justify-center p-4 w-full">
+            {visual.icon}
+            <div className="text-xs font-medium mt-2 capitalize">{content.type}</div>
+            {visual.preview}
           </div>
         )}
       </div>

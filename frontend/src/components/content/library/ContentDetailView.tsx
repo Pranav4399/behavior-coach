@@ -273,6 +273,67 @@ export const ContentDetailView: React.FC<ContentDetailViewProps> = ({
           </div>
         );
         
+      case ContentType.QUIZ:
+        const quizContent = contentAny.quizContent;
+        
+        if (quizContent?.questions && quizContent.questions.length > 0) {
+          return (
+            <div className="p-6">
+              <h3 className="text-lg font-medium mb-4">Quiz Questions</h3>
+              <div className="space-y-6">
+                {quizContent.questions.map((question: any, index: number) => (
+                  <div key={question.id || index} className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md">
+                    <h4 className="font-medium mb-2">
+                      Question {index + 1}: {question.text}
+                    </h4>
+                    {question.options && (
+                      <div className="ml-4 space-y-2">
+                        {question.options.map((option: any, optIndex: number) => (
+                          <div 
+                            key={option.id || optIndex} 
+                            className={`p-2 rounded flex items-start ${option.isCorrect ? 'bg-green-50 border border-green-200 dark:bg-green-900/20 dark:border-green-700' : ''}`}
+                          >
+                            <div className="mr-2 mt-0.5">
+                              {option.isCorrect ? (
+                                <svg className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                              ) : (
+                                <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              )}
+                            </div>
+                            <span>{option.text}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {question.explanation && (
+                      <div className="mt-2 ml-4 text-sm text-gray-600 dark:text-gray-400">
+                        <span className="font-medium">Explanation:</span> {question.explanation}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {quizContent.scoringType && (
+                <div className="mt-4 text-sm">
+                  <span className="font-medium">Scoring type:</span> {quizContent.scoringType}
+                </div>
+              )}
+            </div>
+          );
+        }
+        
+        // Fallback if no quiz content available
+        return (
+          <div className="flex items-center justify-center h-full p-8 flex-col text-gray-500">
+            <FileText className="h-12 w-12 mb-2 text-gray-400" />
+            <p>Quiz content preview not available</p>
+          </div>
+        );
+        
       default:
         return (
           <div className="flex items-center justify-center h-full p-8 text-gray-500">

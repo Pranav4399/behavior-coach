@@ -482,8 +482,11 @@ export function useQuizContent() {
           body: data,
         });
       }
-      // No POST endpoint for quiz content yet, would need to be implemented
-      throw new Error('Direct creation of quiz content is not implemented yet');
+      // For creating new quiz content
+      return apiClient<ContentResponse>('/contents/quiz', {
+        method: 'POST',
+        body: data,
+      });
     },
     onSuccess: (_, variables) => {
       if (variables.contentId) {
@@ -495,13 +498,20 @@ export function useQuizContent() {
           description: "The quiz content was successfully updated.",
           variant: "success",
         });
+      } else {
+        // Show success toast for creation
+        toast({
+          title: "Quiz Content Created",
+          description: "New quiz content was successfully created.",
+          variant: "success",
+        });
       }
       queryClient.invalidateQueries({ queryKey: ['contents'] });
     },
-    onError: (error) => {
+    onError: (error, variables) => {
       // Show error toast
       toast({
-        title: "Update Failed",
+        title: variables?.contentId ? "Update Failed" : "Creation Failed",
         description: error.message || "Failed to save quiz content",
         variant: "error",
       });

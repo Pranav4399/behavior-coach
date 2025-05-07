@@ -13,13 +13,13 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { capitalize } from '@/utils/common';
 
 interface ContentFiltersProps {
   filters: ContentFilterOptions;
   onFilterChange: (filters: ContentFilterOptions) => void;
   searchInput?: string;
   onSearchChange?: (value: string) => void;
-  simpleMode?: boolean;
   className?: string;
 }
 
@@ -33,7 +33,6 @@ export const ContentFilters: React.FC<ContentFiltersProps> = ({
   onFilterChange,
   searchInput: externalSearchInput,
   onSearchChange: externalSearchChange,
-  simpleMode = false,
   className
 }) => {
   // Local state for managing internal filter values
@@ -56,9 +55,7 @@ export const ContentFilters: React.FC<ContentFiltersProps> = ({
     }
     
     // In simple mode, immediately apply filter
-    if (simpleMode) {
-      handleFilterChange('search', value || undefined);
-    }
+    handleFilterChange('search', value || undefined);
   };
   
   // Count active filters
@@ -104,199 +101,75 @@ export const ContentFilters: React.FC<ContentFiltersProps> = ({
     }
   };
   
-  // Render the simple mode (horizontal layout)
-  if (simpleMode) {
-    return (
-      <div className={cn("flex flex-wrap items-center gap-2 w-full", className)}>
-        <div className="relative flex-grow max-w-md">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-          <Input
-            placeholder="Search content..."
-            className="pl-8 w-full h-9"
-            value={searchInput}
-            onChange={(e) => handleSearchInputChange(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                applySearchFilter();
-              }
-            }}
-          />
-        </div>
-        
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Type filter */}
-          <Select
-            value={filters.type || "all"}
-            onValueChange={(value) => handleFilterChange('type', value === "all" ? undefined : value)}
-          >
-            <SelectTrigger className="w-[120px] h-9">
-              <SelectValue placeholder="Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All types</SelectItem>
-              {Object.values(ContentType).map((type) => (
-                <SelectItem key={type} value={type} className="capitalize">
-                  {type}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          {/* Status filter */}
-          <Select
-            value={filters.status || "all"}
-            onValueChange={(value) => handleFilterChange('status', value === "all" ? undefined : value)}
-          >
-            <SelectTrigger className="w-[120px] h-9">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
-              {Object.values(ContentStatus).map((status) => (
-                <SelectItem key={status} value={status} className="capitalize">
-                  {status}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          {/* Clear button (only shown when filters are active) */}
-          {activeFilterCount > 0 && (
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={clearFilters}
-              className="h-9"
-            >
-              <X className="h-4 w-4 mr-1" />
-              Clear
-            </Button>
-          )}
-        </div>
-      </div>
-    );
-  }
-  
-  // Render the advanced mode (vertical layout)
   return (
-    <div className={cn("bg-white dark:bg-gray-800 border rounded-md shadow-sm", className)}>
-      <div className="p-4 space-y-4">
-        <div className="flex flex-col md:flex-row gap-4">
-          {/* Search input */}
-          <div className="flex-1">
-            <Label htmlFor="search">Search</Label>
-            <div className="flex gap-2 mt-1">
-              <Input
-                id="search"
-                placeholder="Search content..."
-                value={searchInput}
-                onChange={(e) => handleSearchInputChange(e.target.value)}
-                className="flex-1"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    applySearchFilter();
-                  }
-                }}
-              />
-              <Button 
-                variant="outline"
-                onClick={applySearchFilter}
-              >
-                Apply
-              </Button>
-            </div>
-          </div>
-          
-          {/* Type filter */}
-          <div className="w-full md:w-40">
-            <Label htmlFor="content-type">Content Type</Label>
-            <Select
-              value={filters.type || "all"}
-              onValueChange={(value) => handleFilterChange('type', value === "all" ? undefined : value)}
-            >
-              <SelectTrigger id="content-type" className="mt-1">
-                <SelectValue placeholder="All types" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All types</SelectItem>
-                {Object.values(ContentType).map((type) => (
-                  <SelectItem key={type} value={type} className="capitalize">
-                    {type}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* Status filter */}
-          <div className="w-full md:w-40">
-            <Label htmlFor="content-status">Status</Label>
-            <Select
-              value={filters.status || "all"}
-              onValueChange={(value) => handleFilterChange('status', value === "all" ? undefined : value)}
-            >
-              <SelectTrigger id="content-status" className="mt-1">
-                <SelectValue placeholder="All statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                {Object.values(ContentStatus).map((status) => (
-                  <SelectItem key={status} value={status} className="capitalize">
-                    {status}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+    <div className={cn("flex flex-wrap items-center gap-2 w-full", className)}>
+      <div className="relative flex-grow max-w-md">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+        <Input
+          placeholder="Search content..."
+          className="pl-8 w-full h-9"
+          value={searchInput}
+          onChange={(e) => handleSearchInputChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              applySearchFilter();
+            }
+          }}
+        />
+      </div>
+      
+      <div className="flex flex-wrap items-center gap-2">
+        {/* Type filter */}
+        <Select
+          value={filters.type || "all"}
+          onValueChange={(value) => handleFilterChange('type', value === "all" ? undefined : value)}
+        >
+          <SelectTrigger className="w-[120px] h-9">
+            <SelectValue placeholder="Type">
+              {filters.type ? capitalize(filters.type) : "All types"}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All types</SelectItem>
+            {Object.values(ContentType).map((type) => (
+              <SelectItem key={type} value={type} className="capitalize">
+                {type}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         
-        {/* Active filters display */}
+        {/* Status filter */}
+        <Select
+          value={filters.status || "all"}
+          onValueChange={(value) => handleFilterChange('status', value === "all" ? undefined : value)}
+        >
+          <SelectTrigger className="w-[120px] h-9">
+            <SelectValue placeholder="Status">
+              {filters.status ? capitalize(filters.status) : "All statuses"}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All statuses</SelectItem>
+            {Object.values(ContentStatus).map((status) => (
+              <SelectItem key={status} value={status} className="capitalize">
+                {status}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        
+        {/* Clear button (only shown when filters are active) */}
         {activeFilterCount > 0 && (
-          <div className="flex flex-wrap gap-2 mt-4">
-            {filters.search && (
-              <Badge variant="outline" className="flex items-center gap-1">
-                Search: {filters.search}
-                <X 
-                  className="h-3 w-3 cursor-pointer" 
-                  onClick={() => {
-                    setSearchInput('');
-                    handleFilterChange('search', undefined);
-                  }}
-                />
-              </Badge>
-            )}
-            
-            {filters.type && (
-              <Badge variant="outline" className="flex items-center gap-1 capitalize">
-                Type: {filters.type}
-                <X 
-                  className="h-3 w-3 cursor-pointer" 
-                  onClick={() => handleFilterChange('type', undefined)}
-                />
-              </Badge>
-            )}
-            
-            {filters.status && (
-              <Badge variant="outline" className="flex items-center gap-1 capitalize">
-                Status: {filters.status}
-                <X 
-                  className="h-3 w-3 cursor-pointer" 
-                  onClick={() => handleFilterChange('status', undefined)}
-                />
-              </Badge>
-            )}
-            
-            {activeFilterCount > 0 && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-7 px-2 text-xs"
-                onClick={clearFilters}
-              >
-                Clear all
-              </Button>
-            )}
-          </div>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={clearFilters}
+            className="h-9"
+          >
+            <X className="h-4 w-4 mr-1" />
+            Clear
+          </Button>
         )}
       </div>
     </div>

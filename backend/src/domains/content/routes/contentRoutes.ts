@@ -242,6 +242,82 @@ router.post('/image', authenticate, contentController.createImageContent);
 
 /**
  * @swagger
+ * /api/contents/document:
+ *   post:
+ *     tags: [Content]
+ *     summary: Create document content
+ *     description: Creates a new document content item
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               status:
+ *                 type: string
+ *               organizationId:
+ *                 type: string
+ *               mediaAssetId:
+ *                 type: string
+ *               documentDescription:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Document content created successfully
+ *       400:
+ *         description: Invalid request data
+ *       401:
+ *         description: Unauthorized
+ */
+router.post('/document', authenticate, contentController.createDocumentContent);
+
+/**
+ * @swagger
+ * /api/contents/quiz:
+ *   post:
+ *     tags: [Content]
+ *     summary: Create quiz content
+ *     description: Creates a new quiz content item
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               status:
+ *                 type: string
+ *               organizationId:
+ *                 type: string
+ *               questions:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *               scoringType:
+ *                 type: string
+ *               timeLimit:
+ *                 type: integer
+ *     responses:
+ *       201:
+ *         description: Quiz content created successfully
+ *       400:
+ *         description: Invalid request data
+ *       401:
+ *         description: Unauthorized
+ */
+router.post('/quiz', authenticate, contentController.createQuizContent);
+
+/**
+ * @swagger
  * /api/contents/from-media:
  *   post:
  *     tags: [Content]
@@ -583,41 +659,5 @@ router.post('/video', authenticate, contentController.createVideoContent);
  *         description: Unauthorized
  */
 router.post('/audio', authenticate, contentController.createAudioContent);
-
-/**
- * @swagger
- * /api/contents/document:
- *   post:
- *     tags: [Content]
- *     summary: Create document content
- *     description: Creates a new document content item
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               title:
- *                 type: string
- *               description:
- *                 type: string
- *               status:
- *                 type: string
- *               organizationId:
- *                 type: string
- *               mediaAssetId:
- *                 type: string
- *               documentDescription:
- *                 type: string
- *     responses:
- *       201:
- *         description: Document content created successfully
- *       400:
- *         description: Invalid request data
- *       401:
- *         description: Unauthorized
- */
-router.post('/document', authenticate, contentController.createDocumentContent);
 
 export default router;

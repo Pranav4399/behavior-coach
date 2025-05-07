@@ -217,7 +217,6 @@ const ContentLibrary: React.FC<ContentLibraryProps> = ({
             onSearchChange={setSearchInput}
             onFilterChange={handleFilterChangeAdapter}
             className="w-full"
-            simpleMode={true}
           />
         )}
       </div>

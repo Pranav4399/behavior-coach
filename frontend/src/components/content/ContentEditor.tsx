@@ -32,8 +32,9 @@ import {
   getContent
 } from '@/hooks/api/use-content';
 import { getThumbnailUrl, formatFileSize } from '@/utils/media';
-import { ContentResponse } from '@/types/content';
+import { QuizQuestion } from '@/types/content';
 import WhatsAppPreview from './WhatsAppPreview';
+import QuizEditor from './quiz/QuizEditor';
 
 interface ContentEditorProps {
   initialContent?: ContentWithDetails;
@@ -159,7 +160,6 @@ const ContentEditor: React.FC<ContentEditorProps> = ({
             ...prev,
             questions: quizData.questions || [],
             scoringType: quizData.scoringType || undefined,
-            timeLimit: quizData.timeLimit || undefined
           }));
         }
         break;
@@ -353,7 +353,6 @@ const ContentEditor: React.FC<ContentEditorProps> = ({
             typeSpecificData = {
               questions: formState.questions,
               scoringType: formState.scoringType,
-              timeLimit: formState.timeLimit
             };
             break;
           
@@ -451,8 +450,37 @@ const ContentEditor: React.FC<ContentEditorProps> = ({
             break;
           
           case ContentType.QUIZ:
+            result = await quizContentMutation.mutateAsync({
+              data: {
+                ...baseData,
+                questions: formState.questions || [],
+                scoringType: (formState.scoringType as 'standard' | 'weighted' | 'no_score') || 'standard',
+                timeLimit: formState.timeLimit
+              }
+            });
+            break;
+          
           case ContentType.REFLECTION:
+            result = await reflectionContentMutation.mutateAsync({
+              data: {
+                ...baseData,
+                promptText: formState.promptText,
+                guidanceText: formState.guidanceText
+              }
+            });
+            break;
+            
           case ContentType.TEMPLATE:
+            result = await templateContentMutation.mutateAsync({
+              data: {
+                ...baseData,
+                templateText: formState.templateText,
+                variables: formState.variables || [],
+                channel: formState.channel || ''
+              }
+            });
+            break;
+            
           default:
             throw new Error(`Direct creation of ${contentType} content is not implemented yet`);
         }
@@ -535,6 +563,27 @@ const ContentEditor: React.FC<ContentEditorProps> = ({
             )}
           </div>
         );
+
+      case ContentType.QUIZ:
+        return <QuizEditor 
+          questions={formState.questions || []}
+          scoringType={formState.scoringType || 'standard'}
+          onQuestionsChange={(questions: QuizQuestion[]) => {
+            setFormState(prev => ({ ...prev, questions }));
+            // Clear error when questions are changed
+            if (errors.questions) {
+              setErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors.questions;
+                return newErrors;
+              });
+            }
+          }}
+          onScoringTypeChange={(scoringType: string) => {
+            setFormState(prev => ({ ...prev, scoringType }));
+          }}
+          error={errors.questions}
+        />;
         
       // For other content types, a placeholder message is shown
       // In a complete implementation, specialized editors would be added for each type
