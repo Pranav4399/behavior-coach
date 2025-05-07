@@ -1,21 +1,5 @@
-import React from 'react';
-import { useRouter } from 'next/navigation';
-import { Content, ContentStatus } from '@/types/content';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-import {
-  ChevronLeft,
-  MoreHorizontal,
-  Edit2,
-  Trash2,
-  Copy,
-  Download,
-  Archive,
-  EyeOff,
-  CheckCircle2,
-  Share2
-} from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +8,24 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
+import { PERMISSIONS } from '@/constants/permissions';
+import { useHasPermission } from '@/lib/permission';
+import { cn } from '@/lib/utils';
+import { Content, ContentStatus } from '@/types/content';
+import {
+  Archive,
+  CheckCircle2,
+  ChevronLeft,
+  Copy,
+  Download,
+  Edit2,
+  EyeOff,
+  MoreHorizontal,
+  Share2,
+  Trash2
+} from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import React from 'react';
 
 interface ContentHeaderProps {
   content: Content;
@@ -66,6 +68,7 @@ export const ContentHeader: React.FC<ContentHeaderProps> = ({
   className
 }) => {
   const router = useRouter();
+  const canEditContent = useHasPermission(PERMISSIONS.CONTENT.EDIT);
   
   // Handle back navigation
   const handleBack = () => {
@@ -111,7 +114,7 @@ export const ContentHeader: React.FC<ContentHeaderProps> = ({
   
   // Check if edit action should be available
   const canEdit = () => {
-    return content.status !== ContentStatus.ARCHIVED;
+    return content.status !== ContentStatus.ARCHIVED && canEditContent;
   };
   
   // Render the actions dropdown menu

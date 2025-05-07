@@ -1,6 +1,7 @@
 import express from 'express';
+import { PERMISSIONS } from '../../../config/permissions';
+import { authMiddleware as authenticate, authorize } from '../../auth/middleware/authMiddleware';
 import { ContentController } from '../controllers/content.controller';
-import { authMiddleware as authenticate } from '../../auth/middleware/authMiddleware';
 
 const router = express.Router();
 const contentController = new ContentController();
@@ -98,7 +99,7 @@ const contentController = new ContentController();
  *       401:
  *         description: Unauthorized
  */
-router.get('/', authenticate, contentController.getContents);
+router.get('/', authenticate, authorize([PERMISSIONS.CONTENT.VIEW]), contentController.getContents);
 
 /**
  * @swagger
@@ -141,7 +142,7 @@ router.get('/', authenticate, contentController.getContents);
  *       401:
  *         description: Unauthorized
  */
-router.get('/with-media', authenticate, contentController.getContentsWithMediaDetails);
+router.get('/with-media', authenticate, authorize([PERMISSIONS.CONTENT.VIEW]), contentController.getContentsWithMediaDetails);
 
 /**
  * @swagger
@@ -164,7 +165,7 @@ router.get('/with-media', authenticate, contentController.getContentsWithMediaDe
  *       401:
  *         description: Unauthorized
  */
-router.get('/:id', authenticate, contentController.getContentById);
+router.get('/:id', authenticate, authorize([PERMISSIONS.CONTENT.VIEW]), contentController.getContentById);
 
 /**
  * @swagger
@@ -200,7 +201,7 @@ router.get('/:id', authenticate, contentController.getContentById);
  *       401:
  *         description: Unauthorized
  */
-router.post('/text', authenticate, contentController.createTextContent);
+router.post('/text', authenticate, authorize([PERMISSIONS.CONTENT.CREATE]), contentController.createTextContent);
 
 /**
  * @swagger
@@ -238,7 +239,7 @@ router.post('/text', authenticate, contentController.createTextContent);
  *       401:
  *         description: Unauthorized
  */
-router.post('/image', authenticate, contentController.createImageContent);
+router.post('/image', authenticate, authorize([PERMISSIONS.CONTENT.CREATE]), contentController.createImageContent);
 
 /**
  * @swagger
@@ -274,7 +275,7 @@ router.post('/image', authenticate, contentController.createImageContent);
  *       401:
  *         description: Unauthorized
  */
-router.post('/document', authenticate, contentController.createDocumentContent);
+router.post('/document', authenticate, authorize([PERMISSIONS.CONTENT.CREATE]), contentController.createDocumentContent);
 
 /**
  * @swagger
@@ -314,7 +315,7 @@ router.post('/document', authenticate, contentController.createDocumentContent);
  *       401:
  *         description: Unauthorized
  */
-router.post('/quiz', authenticate, contentController.createQuizContent);
+router.post('/quiz', authenticate, authorize([PERMISSIONS.CONTENT.CREATE]), contentController.createQuizContent);
 
 /**
  * @swagger
@@ -362,7 +363,7 @@ router.post('/quiz', authenticate, contentController.createQuizContent);
  *       401:
  *         description: Unauthorized
  */
-router.post('/from-media', authenticate, contentController.createContentFromMediaAsset);
+router.post('/from-media', authenticate, authorize([PERMISSIONS.CONTENT.CREATE]), contentController.createContentFromMediaAsset);
 
 /**
  * @swagger
@@ -398,7 +399,7 @@ router.post('/from-media', authenticate, contentController.createContentFromMedi
  *       401:
  *         description: Unauthorized
  */
-router.patch('/:id', authenticate, contentController.updateContent);
+router.patch('/:id', authenticate, authorize([PERMISSIONS.CONTENT.EDIT]), contentController.updateContent);
 
 /**
  * @swagger
@@ -427,7 +428,7 @@ router.patch('/:id', authenticate, contentController.updateContent);
  *       401:
  *         description: Unauthorized
  */
-router.patch('/:id/data', authenticate, contentController.updateTypeSpecificContent);
+router.patch('/:id/data', authenticate, authorize([PERMISSIONS.CONTENT.EDIT]), contentController.updateTypeSpecificContent);
 
 /**
  * @swagger
@@ -450,7 +451,7 @@ router.patch('/:id/data', authenticate, contentController.updateTypeSpecificCont
  *       401:
  *         description: Unauthorized
  */
-router.delete('/:id', authenticate, contentController.deleteContent);
+router.delete('/:id', authenticate, authorize([PERMISSIONS.CONTENT.DELETE]), contentController.deleteContent);
 
 /**
  * @swagger
@@ -484,7 +485,7 @@ router.delete('/:id', authenticate, contentController.deleteContent);
  *       401:
  *         description: Unauthorized
  */
-router.post('/:id/tags', authenticate, contentController.addContentTags);
+router.post('/:id/tags', authenticate, authorize([PERMISSIONS.CONTENT.EDIT]), contentController.addContentTags);
 
 /**
  * @swagger
@@ -512,7 +513,7 @@ router.post('/:id/tags', authenticate, contentController.addContentTags);
  *       401:
  *         description: Unauthorized
  */
-router.delete('/:id/tags/:tagId', authenticate, contentController.removeContentTag);
+router.delete('/:id/tags/:tagId', authenticate, authorize([PERMISSIONS.CONTENT.EDIT]), contentController.removeContentTag);
 
 /**
  * @swagger
@@ -555,7 +556,7 @@ router.delete('/:id/tags/:tagId', authenticate, contentController.removeContentT
  *       401:
  *         description: Unauthorized
  */
-router.get('/tags/:tagId/contents', authenticate, contentController.getContentByTag);
+router.get('/tags/:tagId/contents', authenticate, authorize([PERMISSIONS.CONTENT.VIEW]), contentController.getContentByTag);
 
 /**
  * @swagger
@@ -578,7 +579,7 @@ router.get('/tags/:tagId/contents', authenticate, contentController.getContentBy
  *       401:
  *         description: Unauthorized
  */
-router.get('/:id/with-media', authenticate, contentController.getContentWithMediaDetails);
+router.get('/:id/with-media', authenticate, authorize([PERMISSIONS.CONTENT.VIEW]), contentController.getContentWithMediaDetails);
 
 /**
  * @swagger
@@ -618,7 +619,7 @@ router.get('/:id/with-media', authenticate, contentController.getContentWithMedi
  *       401:
  *         description: Unauthorized
  */
-router.post('/video', authenticate, contentController.createVideoContent);
+router.post('/video', authenticate, authorize([PERMISSIONS.CONTENT.CREATE]), contentController.createVideoContent);
 
 /**
  * @swagger
@@ -658,6 +659,6 @@ router.post('/video', authenticate, contentController.createVideoContent);
  *       401:
  *         description: Unauthorized
  */
-router.post('/audio', authenticate, contentController.createAudioContent);
+router.post('/audio', authenticate, authorize([PERMISSIONS.CONTENT.CREATE]), contentController.createAudioContent);
 
 export default router;

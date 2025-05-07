@@ -1,25 +1,27 @@
-import React from 'react';
-import { useRouter } from 'next/navigation';
-import { Content, ContentStatus, ContentType } from '@/types/content';
 import { Button } from '@/components/ui/button';
-import { 
-  MoreHorizontal, 
-  FileText, 
-  Video, 
-  Image as ImageIcon, 
-  AudioLines, 
-  File,
-  ClipboardList,
-  BookOpen, 
-  FileQuestion
-} from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
+import { PERMISSIONS } from '@/constants/permissions';
+import { useHasPermission } from '@/lib/permission';
 import { cn } from '@/lib/utils';
+import { Content, ContentStatus, ContentType } from '@/types/content';
+import {
+  AudioLines,
+  BookOpen,
+  ClipboardList,
+  File,
+  FileQuestion,
+  FileText,
+  Image as ImageIcon,
+  MoreHorizontal,
+  Video
+} from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import React from 'react';
 
 interface ContentGridItemProps {
   content: Content;
@@ -38,6 +40,10 @@ export const ContentGridItem: React.FC<ContentGridItemProps> = ({
 }) => {
   const router = useRouter();
   const contentAny = content as any;
+
+  const canViewContent = useHasPermission(PERMISSIONS.CONTENT.EDIT);
+  const canEditContent = useHasPermission(PERMISSIONS.CONTENT.EDIT);
+  const canDeleteContent = useHasPermission(PERMISSIONS.CONTENT.EDIT);
 
   // Get the appropriate media data based on content type - more direct approach
   const getMediaData = () => {
@@ -116,10 +122,11 @@ export const ContentGridItem: React.FC<ContentGridItemProps> = ({
       key={content.id}
       className={cn(
         "group relative border rounded-md shadow-sm bg-white dark:bg-gray-800 overflow-hidden cursor-pointer hover:shadow-md transition-shadow",
-        selected && "ring-2 ring-primary"
+        selected && "ring-2 ring-primary",
+        !canViewContent && "pointer-events-none"
       )}
       onClick={() => onToggleSelection(content.id)}
-      onDoubleClick={() => onSelect(content)}
+      onDoubleClick={() => { if(canViewContent) onSelect(content); }}
     >
       {/* Content type indicator and preview */}
       <div 
@@ -172,19 +179,20 @@ export const ContentGridItem: React.FC<ContentGridItemProps> = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem onClick={(e) => {
+            <DropdownMenuItem disabled={!canViewContent} onClick={(e) => {
               e.stopPropagation();
               onSelect(content);
             }}>
               View details
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={(e) => {
+            <DropdownMenuItem disabled={!canEditContent} onClick={(e) => {
               e.stopPropagation();
               router.push(`/content/${content.id}/edit`);
             }}>
               Edit
             </DropdownMenuItem>
             <DropdownMenuItem 
+              disabled={!canDeleteContent}
               className="text-red-600" 
               onClick={(e) => onDelete(content, e)}
             >

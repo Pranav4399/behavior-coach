@@ -1,13 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { 
-  Content, 
-  ContentFilterOptions 
-} from '@/types/content';
-import { useContents, useDeleteContent } from '@/hooks/api/use-content';
-import { useDebounce } from '@/hooks/useDebounce';
-import { Button } from '@/components/ui/button';
-import { 
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -17,9 +8,20 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
 import { LoadingOverlay } from '@/components/ui/loading-overlay';
-import { PlusCircle } from 'lucide-react';
+import { PERMISSIONS } from '@/constants/permissions';
+import { useContents, useDeleteContent } from '@/hooks/api/use-content';
+import { useDebounce } from '@/hooks/useDebounce';
+import { useHasPermission } from '@/lib/permission';
 import { cn } from '@/lib/utils';
+import {
+  Content,
+  ContentFilterOptions
+} from '@/types/content';
+import { PlusCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
 import { ContentFilters, ContentGrid, ContentPagination } from './library';
 
 interface ContentLibraryProps {
@@ -54,6 +56,7 @@ const ContentLibrary: React.FC<ContentLibraryProps> = ({
   initialFilters = {}
 }) => {
   const router = useRouter();
+  const canCreateContent = useHasPermission(PERMISSIONS.CONTENT.CREATE);
   
   // State for filters and pagination
   const [filters, setFilters] = useState<ContentFilterOptions>({
@@ -195,7 +198,7 @@ const ContentLibrary: React.FC<ContentLibraryProps> = ({
       <div className="flex flex-col gap-4 w-full mb-6">
         {/* Header with create button */}
         <div className="flex justify-end">
-          {showCreateButton && (
+          {showCreateButton && canCreateContent && (
             <Button
               variant="default"
               size="sm"
