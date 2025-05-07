@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
+import { MediaUploader } from '@/components/media';
 import { getThumbnailUrl, formatFileSize, isImage, isVideo, isAudio, isDocument } from '@/utils/media';
 
 interface MediaSelectorProps {
@@ -18,6 +19,7 @@ interface MediaSelectorProps {
   isMultiSelect?: boolean;
   initialSelectedAssets?: MediaAsset[];
   className?: string;
+  userId?: string;
 }
 
 const MediaSelector: React.FC<MediaSelectorProps> = ({
@@ -28,6 +30,7 @@ const MediaSelector: React.FC<MediaSelectorProps> = ({
   isMultiSelect = false,
   initialSelectedAssets = [],
   className = '',
+  userId,
 }) => {
   // State for filters and search
   const [searchTerm, setSearchTerm] = useState('');
@@ -52,16 +55,20 @@ const MediaSelector: React.FC<MediaSelectorProps> = ({
   // Handle tab change
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    if (value === 'all') {
-      setCurrentFilter({
-        ...currentFilter,
-        type: undefined
-      });
-    } else {
-      setCurrentFilter({
-        ...currentFilter,
-        type: value as MediaType
-      });
+    
+    // Only set filter if we're on a media type tab
+    if (value !== 'upload') {
+      if (value === 'all') {
+        setCurrentFilter({
+          ...currentFilter,
+          type: undefined
+        });
+      } else {
+        setCurrentFilter({
+          ...currentFilter,
+          type: value as MediaType
+        });
+      }
     }
   };
   
@@ -117,6 +124,20 @@ const MediaSelector: React.FC<MediaSelectorProps> = ({
       // For multi-select, we pass the first selected asset
       // In a real implementation, you would want to modify onSelect to handle multiple assets
       onSelect(selectedAssets[0]);
+    }
+  };
+  
+  // Handle media upload
+  const handleMediaUpload = (asset: MediaAsset) => {
+    // Refresh the media list after upload
+    refetch();
+    
+    // Switch to the "all" tab to show the newly uploaded asset
+    setActiveTab('all');
+    
+    // Auto-select the newly uploaded asset
+    if (onSelect) {
+      onSelect(asset);
     }
   };
   
@@ -204,18 +225,20 @@ const MediaSelector: React.FC<MediaSelectorProps> = ({
   
   return (
     <div className={`${className}`}>
-      {/* Header with search */}
+      {/* Header with search and title */}
       <div className="flex flex-col mb-4">
-        <h2 className="text-lg font-semibold mb-2">Select Media</h2>
-        <Input
-          type="text"
-          placeholder="Search media assets..."
-          value={searchTerm}
-          onChange={handleSearchChange}
-          className="mb-4"
-        />
+        <h2 className="text-lg font-semibold mb-2">Media Library</h2>
+        {activeTab !== 'upload' && (
+          <Input
+            type="text"
+            placeholder="Search media assets..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="mb-4"
+          />
+        )}
         
-        {/* Type filter tabs */}
+        {/* Tabs including Upload tab */}
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="w-full justify-start">
             <TabsTrigger value="all">All</TabsTrigger>
@@ -223,38 +246,37 @@ const MediaSelector: React.FC<MediaSelectorProps> = ({
             <TabsTrigger value={MediaType.VIDEO}>Videos</TabsTrigger>
             <TabsTrigger value={MediaType.AUDIO}>Audio</TabsTrigger>
             <TabsTrigger value={MediaType.DOCUMENT}>Documents</TabsTrigger>
+            <TabsTrigger value="upload" className="ml-auto">Upload New</TabsTrigger>
           </TabsList>
           
-          <TabsContent value={activeTab} className="mt-4">
-            {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Spinner className="w-10 h-10" />
-              </div>
-            ) : error ? (
-              <div className="text-center py-12 text-red-500">
-                Failed to load media assets. Please try again.
-              </div>
-            ) : mediaData?.mediaAssets.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                No media assets found. Upload some media first.
-              </div>
-            ) : (
-              <>
-                {/* Media grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                  {mediaData?.mediaAssets.map(asset => renderMediaItem(asset))}
-                </div>
-                
-                {/* Pagination */}
-                {mediaData && mediaData.pagination.total > mediaData.mediaAssets.length && (
-                  <div className="mt-4 text-center">
-                    <Button variant="outline" onClick={loadMore}>
-                      Load More
-                    </Button>
-                  </div>
-                )}
-              </>
-            )}
+          {/* Media display tabs */}
+          <TabsContent value="all" className="mt-4">
+            {renderMediaTabContent()}
+          </TabsContent>
+          <TabsContent value={MediaType.IMAGE} className="mt-4">
+            {renderMediaTabContent()}
+          </TabsContent>
+          <TabsContent value={MediaType.VIDEO} className="mt-4">
+            {renderMediaTabContent()}
+          </TabsContent>
+          <TabsContent value={MediaType.AUDIO} className="mt-4">
+            {renderMediaTabContent()}
+          </TabsContent>
+          <TabsContent value={MediaType.DOCUMENT} className="mt-4">
+            {renderMediaTabContent()}
+          </TabsContent>
+          
+          {/* Upload tab */}
+          <TabsContent value="upload" className="mt-4">
+            <div className="p-1">
+              <MediaUploader 
+                organizationId={organizationId}
+                onUploadComplete={handleMediaUpload}
+                onUploadError={(error) => console.error('Upload error:', error)}
+                uploadedById={userId}
+                allowedTypes={allowedTypes ? allowedTypes.map(type => `${type}/*`) : undefined}
+              />
+            </div>
           </TabsContent>
         </Tabs>
       </div>
@@ -282,6 +304,54 @@ const MediaSelector: React.FC<MediaSelectorProps> = ({
       )}
     </div>
   );
+  
+  // Helper function to render media tab content
+  function renderMediaTabContent() {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center py-12">
+          <Spinner className="w-10 h-10" />
+        </div>
+      );
+    }
+    
+    if (error) {
+      return (
+        <div className="text-center py-12 text-red-500">
+          Failed to load media assets. Please try again.
+        </div>
+      );
+    }
+    
+    if (!mediaData?.mediaAssets.length) {
+      return (
+        <div className="text-center py-12 text-gray-500">
+          <p className="mb-4">No media assets found.</p>
+          <Button onClick={() => setActiveTab('upload')}>
+            Upload New Media
+          </Button>
+        </div>
+      );
+    }
+    
+    return (
+      <>
+        {/* Media grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          {mediaData?.mediaAssets.map(asset => renderMediaItem(asset))}
+        </div>
+        
+        {/* Pagination */}
+        {mediaData && mediaData.pagination.total > mediaData.mediaAssets.length && (
+          <div className="mt-4 text-center">
+            <Button variant="outline" onClick={loadMore}>
+              Load More
+            </Button>
+          </div>
+        )}
+      </>
+    );
+  }
 };
 
 export default MediaSelector; 

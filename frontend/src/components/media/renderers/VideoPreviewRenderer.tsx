@@ -1,10 +1,11 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { MediaAsset } from '@/types/mediaAsset';
 import { cn } from '@/lib/utils';
 import { Play, Pause, Volume2, VolumeX, Maximize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export interface VideoPreviewRendererProps {
   mediaAsset: MediaAsset;
@@ -46,34 +47,59 @@ const VideoPreviewRenderer: React.FC<VideoPreviewRendererProps> = ({
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isControlsVisible, setIsControlsVisible] = useState(false);
   const [isUserInteracting, setIsUserInteracting] = useState(false);
-  
-  // Initialize video with props when component mounts or props change
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    
-    if (isPlaying) {
-      video.play().catch(err => {
-        console.error('Error playing video:', err);
-        setIsPlaying(false);
-      });
-    } else {
-      video.pause();
-    }
-    
-    video.muted = isMuted;
-    video.volume = volume;
-  }, [isPlaying, isMuted, volume]);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Handle video metadata loaded
   const handleLoadedMetadata = () => {
     if (!videoRef.current) return;
     setDuration(videoRef.current.duration);
+    setIsLoading(false);
     if (onLoad) onLoad();
+  };
+  
+  // Handle play/pause
+  const handlePlayPause = () => {
+    if (!videoRef.current) return;
+    
+    if (isPlaying) {
+      videoRef.current.pause();
+    } else {
+      videoRef.current.play().catch(err => {
+        console.error('Error playing video:', err);
+      });
+    }
+    
+    setIsPlaying(!isPlaying);
+  };
+  
+  // Handle mute toggle
+  const handleMuteToggle = () => {
+    if (!videoRef.current) return;
+    
+    videoRef.current.muted = !isMuted;
+    setIsMuted(!isMuted);
+  };
+  
+  // Handle volume change
+  const handleVolumeChange = (value: number[]) => {
+    if (!videoRef.current) return;
+    
+    const newVolume = value[0];
+    videoRef.current.volume = newVolume;
+    setVolume(newVolume);
+    
+    if (newVolume === 0) {
+      videoRef.current.muted = true;
+      setIsMuted(true);
+    } else if (isMuted) {
+      videoRef.current.muted = false;
+      setIsMuted(false);
+    }
   };
   
   // Handle video load error
   const handleVideoError = () => {
+    setIsLoading(false);
     if (onError) onError('Failed to load video');
   };
   
@@ -86,31 +112,20 @@ const VideoPreviewRenderer: React.FC<VideoPreviewRendererProps> = ({
   // Handle video end
   const handleVideoEnded = () => {
     setIsPlaying(false);
-    if (loop) {
+    if (loop && videoRef.current) {
+      videoRef.current.play();
       setIsPlaying(true);
-      videoRef.current?.play();
     }
   };
   
   // Toggle play/pause
   const togglePlay = () => {
-    setIsPlaying(prev => !prev);
+    handlePlayPause();
   };
   
   // Toggle mute
   const toggleMute = () => {
-    setIsMuted(prev => !prev);
-  };
-  
-  // Set volume
-  const handleVolumeChange = (value: number[]) => {
-    const newVolume = value[0];
-    setVolume(newVolume);
-    if (newVolume === 0) {
-      setIsMuted(true);
-    } else if (isMuted) {
-      setIsMuted(false);
-    }
+    handleMuteToggle();
   };
   
   // Seek to position
@@ -154,6 +169,16 @@ const VideoPreviewRenderer: React.FC<VideoPreviewRendererProps> = ({
     setIsUserInteracting(false);
   };
   
+  // If there's no URL, show an error
+  if (!mediaAsset?.url) {
+    if (onError) onError('Video URL is missing');
+    return (
+      <div className="text-red-500 p-4">
+        Error: Video URL is missing
+      </div>
+    );
+  }
+  
   // Render video with controls
   const renderVideo = (isFullScreenView = false) => (
     <div 
@@ -166,11 +191,21 @@ const VideoPreviewRenderer: React.FC<VideoPreviewRendererProps> = ({
       onMouseLeave={handleHideControls}
       onMouseMove={handleShowControls}
     >
+      {/* Show loading skeleton while video is loading */}
+      {isLoading && (
+        <div className="w-full h-48 flex items-center justify-center">
+          <Skeleton className="w-full h-48" />
+        </div>
+      )}
+      
       {/* Video */}
       <video
         ref={videoRef}
         src={mediaAsset.url}
-        className="w-full rounded-md object-contain"
+        className={cn(
+          "w-full rounded-md object-contain",
+          isLoading ? "hidden" : ""
+        )}
         onLoadedMetadata={handleLoadedMetadata}
         onError={handleVideoError}
         onTimeUpdate={handleTimeUpdate}
@@ -185,7 +220,7 @@ const VideoPreviewRenderer: React.FC<VideoPreviewRendererProps> = ({
       </video>
       
       {/* Custom controls */}
-      {showControls && isControlsVisible && (
+      {showControls && isControlsVisible && !isLoading && (
         <div 
           ref={controlsRef}
           className={cn(
@@ -264,7 +299,7 @@ const VideoPreviewRenderer: React.FC<VideoPreviewRendererProps> = ({
       )}
       
       {/* Play/Pause overlay for center of video */}
-      {isControlsVisible && (
+      {isControlsVisible && !isLoading && (
         <div 
           className="absolute inset-0 flex items-center justify-center"
           onClick={togglePlay}

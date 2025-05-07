@@ -9,6 +9,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export interface DocumentPreviewRendererProps {
   mediaAsset: MediaAsset;
@@ -33,6 +34,16 @@ const DocumentPreviewRenderer: React.FC<DocumentPreviewRendererProps> = ({
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Validate URL
+  if (!mediaAsset?.url) {
+    if (onError) onError('Document URL is missing');
+    return (
+      <div className="text-red-500 p-4">
+        Error: Document URL is missing
+      </div>
+    );
+  }
   
   // Determine document type from file extension
   const getDocumentType = () => {
@@ -114,7 +125,7 @@ const DocumentPreviewRenderer: React.FC<DocumentPreviewRendererProps> = ({
         <div className="w-full h-[400px] bg-gray-100 dark:bg-gray-800 relative">
           <iframe
             src={mediaAsset.url + '#toolbar=0&navpanes=0'}
-            className="w-full h-full border-0"
+            className={cn("w-full h-full border-0", isLoaded ? "" : "hidden")}
             onLoad={handleIframeLoad}
             onError={handleIframeError}
             title={mediaAsset.fileName || 'PDF document'}
@@ -122,7 +133,7 @@ const DocumentPreviewRenderer: React.FC<DocumentPreviewRendererProps> = ({
           
           {!isLoaded && !error && (
             <div className="absolute inset-0 flex items-center justify-center">
-              <p className="text-gray-500">Loading document...</p>
+              <Skeleton className="w-full h-full" />
             </div>
           )}
           

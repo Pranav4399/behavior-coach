@@ -53,7 +53,6 @@ export interface Content {
  */
 export interface ContentWithDetails extends Content {
   typeSpecificData?: TextContent | ImageContent | VideoContent | AudioContent | DocumentContent | QuizContent | ReflectionContent | TemplateContent;
-  mediaDetails?: MediaAsset | null;
   textContent?: TextContent | null;
   imageContent?: ImageContent | null;
   videoContent?: VideoContent | null;

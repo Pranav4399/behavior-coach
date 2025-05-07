@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { Maximize2, ZoomIn, ZoomOut, RotateCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export interface ImagePreviewRendererProps {
   mediaAsset: MediaAsset;
@@ -34,14 +35,27 @@ const ImagePreviewRenderer: React.FC<ImagePreviewRendererProps> = ({
   const [zoomLevel, setZoomLevel] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // If there's no URL, show an error
+  if (!mediaAsset?.url) {
+    if (onError) onError('Image URL is missing');
+    return (
+      <div className="text-red-500 p-4">
+        Error: Image URL is missing
+      </div>
+    );
+  }
   
   // Handle image load success
   const handleImageLoad = () => {
+    setIsLoading(false);
     if (onLoad) onLoad();
   };
   
   // Handle image load error
   const handleImageError = () => {
+    setIsLoading(false);
     if (onError) onError('Failed to load image');
   };
   
@@ -86,7 +100,7 @@ const ImagePreviewRenderer: React.FC<ImagePreviewRendererProps> = ({
       isFullScreenView ? "w-full h-full flex items-center justify-center" : "",
       className
     )}>
-      {/* Image */}
+      {/* Image - hidden while loading but still loads in background */}
       <img
         src={mediaAsset.url}
         alt={alt}
@@ -94,10 +108,18 @@ const ImagePreviewRenderer: React.FC<ImagePreviewRendererProps> = ({
         onError={handleImageError}
         className={cn(
           "max-w-full rounded-md object-contain",
-          isFullScreenView ? "max-h-[80vh]" : "max-h-[500px]"
+          isFullScreenView ? "max-h-[80vh]" : "max-h-[500px]",
+          isLoading ? "hidden" : ""
         )}
         style={getTransformStyle()}
       />
+      
+      {/* Show loading skeleton while image is loading */}
+      {isLoading && (
+        <div className="w-full h-32 flex items-center justify-center">
+          <Skeleton className="w-full h-32" />
+        </div>
+      )}
       
       {/* Controls (only shown on hover) */}
       <div className={cn(

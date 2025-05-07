@@ -45,39 +45,31 @@ const MediaPreview: React.FC<MediaPreviewProps> = ({
   fallbackComponent,
   showFullScreenButton = true,
 }) => {
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Handle loading complete
-  const handleLoad = () => {
-    setIsLoading(false);
-    if (onLoad) onLoad();
-  };
 
   // Handle media error
   const handleError = (errorMessage: string) => {
-    setIsLoading(false);
     setError(errorMessage);
     if (onError) onError(errorMessage);
   };
 
   // Render media based on type
   const renderMedia = () => {
-    if (!mediaAsset || error) {
+    if (!mediaAsset) {
+      return renderError('No media asset provided');
+    }
+    
+    if (error) {
       return renderError();
     }
-
-    if (isLoading) {
-      return renderLoading();
-    }
-
+    
     switch (mediaAsset.type) {
       case MediaType.IMAGE:
         return (
           <ImagePreviewRenderer
             mediaAsset={mediaAsset}
             alt={alt || mediaAsset.altText || 'Image'}
-            onLoad={handleLoad}
+            onLoad={onLoad}
             onError={handleError}
             showFullScreenButton={showFullScreenButton}
           />
@@ -91,7 +83,7 @@ const MediaPreview: React.FC<MediaPreviewProps> = ({
             autoPlay={autoPlay}
             loop={loop}
             muted={muted}
-            onLoad={handleLoad}
+            onLoad={onLoad}
             onError={handleError}
           />
         );
@@ -103,7 +95,7 @@ const MediaPreview: React.FC<MediaPreviewProps> = ({
             showControls={showControls}
             autoPlay={autoPlay}
             loop={loop}
-            onLoad={handleLoad}
+            onLoad={onLoad}
             onError={handleError}
           />
         );
@@ -112,7 +104,7 @@ const MediaPreview: React.FC<MediaPreviewProps> = ({
         return (
           <DocumentPreviewRenderer
             mediaAsset={mediaAsset}
-            onLoad={handleLoad}
+            onLoad={onLoad}
             onError={handleError}
           />
         );
@@ -121,13 +113,6 @@ const MediaPreview: React.FC<MediaPreviewProps> = ({
         return renderError('Unsupported media type');
     }
   };
-
-  // Render loading state
-  const renderLoading = () => (
-    <div className="w-full h-full flex items-center justify-center">
-      <Skeleton className="w-full h-32" />
-    </div>
-  );
 
   // Render error state
   const renderError = (errorMessage: string = error || 'Failed to load media') => {

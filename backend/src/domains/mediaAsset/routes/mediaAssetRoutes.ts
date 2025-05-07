@@ -72,7 +72,7 @@ const mediaAssetController = new MediaAssetController();
 
 /**
  * @swagger
- * /api/media:
+ * /api/mediaAssets:
  *   get:
  *     tags: [Media]
  *     summary: Get all media assets
@@ -116,7 +116,7 @@ router.get('/', authenticate, mediaAssetController.getMediaAssets);
 
 /**
  * @swagger
- * /api/media/{id}:
+ * /api/mediaAssets/{id}:
  *   get:
  *     tags: [Media]
  *     summary: Get a media asset by ID
@@ -139,7 +139,7 @@ router.get('/:id', authenticate, mediaAssetController.getMediaAssetById);
 
 /**
  * @swagger
- * /api/media/upload:
+ * /api/mediaAssets:
  *   post:
  *     tags: [Media]
  *     summary: Upload a new media asset
@@ -170,7 +170,7 @@ router.get('/:id', authenticate, mediaAssetController.getMediaAssetById);
  *         description: Unauthorized
  */
 router.post(
-  '/upload',
+  '/',
   authenticate,
   upload.single('file'),
   mediaAssetController.uploadMediaAsset
@@ -178,7 +178,7 @@ router.post(
 
 /**
  * @swagger
- * /api/media/{id}:
+ * /api/mediaAssets/{id}:
  *   patch:
  *     tags: [Media]
  *     summary: Update a media asset
@@ -212,7 +212,7 @@ router.patch('/:id', authenticate, mediaAssetController.updateMediaAsset);
 
 /**
  * @swagger
- * /api/media/{id}:
+ * /api/mediaAssets/{id}:
  *   delete:
  *     tags: [Media]
  *     summary: Delete a media asset
@@ -237,7 +237,7 @@ router.delete('/:id', authenticate, mediaAssetController.deleteMediaAsset);
 
 /**
  * @swagger
- * /api/media/{id}/usage:
+ * /api/mediaAssets/{id}/usage:
  *   get:
  *     tags: [Media]
  *     summary: Get media asset usage
@@ -260,7 +260,7 @@ router.get('/:id/usage', authenticate, mediaAssetController.getMediaAssetUsage);
 
 /**
  * @swagger
- * /api/media/{id}/url:
+ * /api/mediaAssets/{id}/presigned-url:
  *   get:
  *     tags: [Media]
  *     summary: Get a pre-signed URL
@@ -286,7 +286,7 @@ router.get('/:id/usage', authenticate, mediaAssetController.getMediaAssetUsage);
  *               properties:
  *                 success:
  *                   type: boolean
- *                 presignedUrl:
+ *                 url:
  *                   type: string
  *                   description: Secure URL with expiration
  *                 expiresAt:
@@ -297,6 +297,9 @@ router.get('/:id/usage', authenticate, mediaAssetController.getMediaAssetUsage);
  *       401:
  *         description: Unauthorized
  */
+router.get('/:id/presigned-url', authenticate, mediaAssetController.getPresignedUrl);
+
+// Alias for backward compatibility
 router.get('/:id/url', authenticate, mediaAssetController.getPresignedUrl);
 
 export default router; 

@@ -64,9 +64,26 @@ const ContentEditor: React.FC<ContentEditorProps> = ({
   });
   
   // Media state
-  const [selectedMedia, setSelectedMedia] = useState<MediaAsset | null>(
-    initialContent?.mediaDetails || null
-  );
+  const [selectedMedia, setSelectedMedia] = useState<MediaAsset | null>(() => {
+    if (!initialContent) return null;
+    
+    // Cast to any to access potentially nested mediaAsset objects
+    const contentAny = initialContent as any;
+    
+    // Then check in the type-specific content
+    switch (contentType) {
+      case ContentType.IMAGE:
+        return contentAny.imageContent?.mediaAsset || null;
+      case ContentType.VIDEO:
+        return contentAny.videoContent?.mediaAsset || null;
+      case ContentType.AUDIO:
+        return contentAny.audioContent?.mediaAsset || null;
+      case ContentType.DOCUMENT:
+        return contentAny.documentContent?.mediaAsset || null;
+      default:
+        return null;
+    }
+  });
   const [isMediaSelectorOpen, setIsMediaSelectorOpen] = useState(false);
   const [isMediaUploaderOpen, setIsMediaUploaderOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('editor');
@@ -75,7 +92,7 @@ const ContentEditor: React.FC<ContentEditorProps> = ({
   // Initialize form state from initialContent's type-specific data
   useEffect(() => {
     switch (contentType) {
-      case ContentType.TEXT: {
+      case ContentType.TEXT:
         const textData = initialContent?.textContent;
         if (textData) {
           setFormState(prev => ({
@@ -85,8 +102,7 @@ const ContentEditor: React.FC<ContentEditorProps> = ({
           }));
         }
         break;
-      }
-      case ContentType.IMAGE: {
+      case ContentType.IMAGE:
         const imageData = initialContent?.imageContent;
         if (imageData) {
           setFormState(prev => ({
@@ -96,8 +112,7 @@ const ContentEditor: React.FC<ContentEditorProps> = ({
           }));
         }
         break;
-      }
-      case ContentType.VIDEO: {
+      case ContentType.VIDEO:
         const videoData = initialContent?.videoContent;
         if (videoData) {
           setFormState(prev => ({
@@ -107,8 +122,7 @@ const ContentEditor: React.FC<ContentEditorProps> = ({
           }));
         }
         break;
-      }
-      case ContentType.AUDIO: {
+      case ContentType.AUDIO:
         const audioData = initialContent?.audioContent;
         if (audioData) {
           setFormState(prev => ({
@@ -118,8 +132,7 @@ const ContentEditor: React.FC<ContentEditorProps> = ({
           }));
         }
         break;
-      }
-      case ContentType.DOCUMENT: {
+      case ContentType.DOCUMENT:
         const documentData = initialContent?.documentContent;
         if (documentData) {
           // Document type may use description in both places
@@ -129,8 +142,7 @@ const ContentEditor: React.FC<ContentEditorProps> = ({
           }));
         }
         break;
-      }
-      case ContentType.REFLECTION: {
+      case ContentType.REFLECTION:
         const reflectionData = initialContent?.reflectionContent;
         if (reflectionData) {
           setFormState(prev => ({
@@ -140,8 +152,7 @@ const ContentEditor: React.FC<ContentEditorProps> = ({
           }));
         }
         break;
-      }
-      case ContentType.QUIZ: {
+      case ContentType.QUIZ:
         const quizData = initialContent?.quizContent;
         if (quizData) {
           setFormState(prev => ({
@@ -152,8 +163,7 @@ const ContentEditor: React.FC<ContentEditorProps> = ({
           }));
         }
         break;
-      }
-      case ContentType.TEMPLATE: {
+      case ContentType.TEMPLATE:
         const templateData = initialContent?.templateContent;
         if (templateData) {
           setFormState(prev => ({
@@ -164,7 +174,6 @@ const ContentEditor: React.FC<ContentEditorProps> = ({
           }));
         }
         break;
-      }
     }
   }, [initialContent, contentType]);
   
@@ -682,7 +691,6 @@ const ContentEditor: React.FC<ContentEditorProps> = ({
                       description: formState.description || '',
                       type: contentType,
                       status: formState.status || ContentStatus.DRAFT,
-                      mediaDetails: selectedMedia,
                       createdAt: initialContent?.createdAt || new Date().toISOString(),
                       updatedAt: initialContent?.updatedAt || new Date().toISOString(),
                       organizationId: organizationId,
@@ -780,6 +788,7 @@ const ContentEditor: React.FC<ContentEditorProps> = ({
             onSelect={handleMediaSelect}
             onCancel={() => setIsMediaSelectorOpen(false)}
             allowedTypes={requiredMediaType ? [requiredMediaType] : undefined}
+            userId={userId}
           />
         </DialogContent>
       </Dialog>

@@ -1,9 +1,10 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { MediaAsset } from '@/types/mediaAsset';
 import { cn } from '@/lib/utils';
 import { Play, Pause, Volume2, VolumeX, SkipBack, SkipForward } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export interface AudioPreviewRendererProps {
   mediaAsset: MediaAsset;
@@ -39,36 +40,68 @@ const AudioPreviewRenderer: React.FC<AudioPreviewRendererProps> = ({
   const [volume, setVolume] = useState(1);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Initialize audio with props when component mounts or props change
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
+  // If there's no URL, show an error
+  if (!mediaAsset?.url) {
+    if (onError) onError('Audio URL is missing');
+    return (
+      <div className="text-red-500 p-4">
+        Error: Audio URL is missing
+      </div>
+    );
+  }
+  
+  // Handle play/pause toggling
+  const handlePlayPause = () => {
+    if (!audioRef.current) return;
     
     if (isPlaying) {
-      audio.play().catch(err => {
-        console.error('Error playing audio:', err);
-        setIsPlaying(false);
-      });
+      audioRef.current.pause();
     } else {
-      audio.pause();
+      audioRef.current.play().catch(err => {
+        console.error('Error playing audio:', err);
+      });
     }
     
-    audio.muted = isMuted;
-    audio.volume = volume;
-  }, [isPlaying, isMuted, volume]);
+    setIsPlaying(!isPlaying);
+  };
+  
+  // Handle mute toggling
+  const handleMuteToggle = () => {
+    if (!audioRef.current) return;
+    
+    audioRef.current.muted = !isMuted;
+    setIsMuted(!isMuted);
+  };
+  
+  // Handle volume adjustment
+  const handleVolumeAdjust = (newVolume: number) => {
+    if (!audioRef.current) return;
+    
+    audioRef.current.volume = newVolume;
+    setVolume(newVolume);
+    
+    if (newVolume === 0) {
+      audioRef.current.muted = true;
+      setIsMuted(true);
+    } else if (isMuted) {
+      audioRef.current.muted = false;
+      setIsMuted(false);
+    }
+  };
   
   // Handle audio metadata loaded
   const handleLoadedMetadata = () => {
     if (!audioRef.current) return;
     setDuration(audioRef.current.duration);
-    setIsLoaded(true);
+    setIsLoading(false);
     if (onLoad) onLoad();
   };
   
   // Handle audio load error
   const handleAudioError = () => {
+    setIsLoading(false);
     if (onError) onError('Failed to load audio');
   };
   
@@ -81,31 +114,26 @@ const AudioPreviewRenderer: React.FC<AudioPreviewRendererProps> = ({
   // Handle audio end
   const handleAudioEnded = () => {
     setIsPlaying(false);
-    if (loop) {
+    if (loop && audioRef.current) {
+      audioRef.current.play();
       setIsPlaying(true);
-      audioRef.current?.play();
     }
   };
   
   // Toggle play/pause
   const togglePlay = () => {
-    setIsPlaying(prev => !prev);
+    handlePlayPause();
   };
   
   // Toggle mute
   const toggleMute = () => {
-    setIsMuted(prev => !prev);
+    handleMuteToggle();
   };
   
   // Set volume
   const handleVolumeChange = (value: number[]) => {
     const newVolume = value[0];
-    setVolume(newVolume);
-    if (newVolume === 0) {
-      setIsMuted(true);
-    } else if (isMuted) {
-      setIsMuted(false);
-    }
+    handleVolumeAdjust(newVolume);
   };
   
   // Seek to position
@@ -183,17 +211,19 @@ const AudioPreviewRenderer: React.FC<AudioPreviewRendererProps> = ({
         Your browser does not support the audio element.
       </audio>
       
-      {/* Audio visualization (waveform) */}
+      {/* Audio visualization (waveform) or loading state */}
       <div className="bg-gray-50 dark:bg-gray-800 p-3">
-        {isLoaded ? generateWaveform() : (
+        {isLoading ? (
           <div className="h-16 flex items-center justify-center">
-            <p className="text-gray-400">Loading audio...</p>
+            <Skeleton className="w-full h-12" />
           </div>
+        ) : (
+          generateWaveform()
         )}
       </div>
       
       {/* Controls */}
-      {showControls && (
+      {showControls && !isLoading && (
         <div className="p-3 bg-white dark:bg-gray-900">
           {/* Progress bar */}
           <div className="mb-3">

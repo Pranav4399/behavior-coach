@@ -43,7 +43,7 @@ const WhatsAppPreview: React.FC<WhatsAppPreviewProps> = ({
   const currentTime = new Date();
   
   // Helper to safely access type-specific data
-  const getTypeSpecificData = <T extends object>(contentType: ContentType): T | null => {
+  const getTypeSpecificData = <T extends object>(contentType: ContentType) => {
     // First try the direct content type property
     switch (contentType) {
       case ContentType.TEXT:
@@ -71,10 +71,6 @@ const WhatsAppPreview: React.FC<WhatsAppPreviewProps> = ({
         if (content.templateContent) return content.templateContent as T;
         break;
     }
-    
-    // Fallback to typeSpecificData
-    if (!content.typeSpecificData) return null;
-    return (content.type === contentType) ? content.typeSpecificData as T : null;
   };
   
   // Calculate display message based on content type
@@ -119,7 +115,7 @@ const WhatsAppPreview: React.FC<WhatsAppPreviewProps> = ({
   // Function to render content preview based on type
   const renderContentPreview = () => {
     // Get media asset to use (either passed directly or from content)
-    const mediaToUse = mediaAsset || content.mediaDetails;
+    const mediaToUse = mediaAsset;
     
     switch (content.type) {
       case ContentType.TEXT:

@@ -1,34 +1,18 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   Content, 
   ContentType, 
   ContentStatus,
   ContentTag,
-  ContentWithDetails,
-  TextContent,
-  ImageContent,
-  VideoContent,
-  AudioContent,
-  DocumentContent
+  ContentWithDetails
 } from '@/types/content';
-import { MediaAsset, MediaType } from '@/types/mediaAsset';
-import { formatDistanceToNow } from 'date-fns';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { 
-  Calendar, 
-  User, 
-  Tag as TagIcon, 
-  BarChart2,
   FileText 
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
@@ -84,14 +68,8 @@ export const ContentDetailView: React.FC<ContentDetailViewProps> = ({
 }) => {
   const router = useRouter();
   
-  // Get formatted timestamps
-  const createdAt = content.createdAt ? new Date(content.createdAt) : null;
-  const updatedAt = content.updatedAt ? new Date(content.updatedAt) : null;
-  
-  // Extract media asset and type-specific data if available
-  const contentWithDetails = content as ContentWithDetails;
-  const mediaAsset = contentWithDetails.mediaDetails;
-  const typeSpecificData = contentWithDetails.typeSpecificData;
+  // Cast content to any to access different properties based on content type
+  const contentAny = content as any;
   
   // Handle edit button click
   const handleEdit = () => {
@@ -174,12 +152,9 @@ export const ContentDetailView: React.FC<ContentDetailViewProps> = ({
     // Handle each content type specifically
     switch (content.type) {
       case ContentType.TEXT:
-        // Try to access text content from the content object directly (it may be nested)
-        // Cast to any first to avoid TypeScript errors since the structure might vary
-        const contentObj = content as any;
-        const textContent = contentObj.textContent;
+        // Try to access text content from the content object directly
+        const textContent = contentAny.textContent;
         
-        // First try to use the directly available textContent, then fallback to typeSpecificData
         return (
           <div className="p-6">
             <h3 className="text-lg font-medium mb-4">Content</h3>
@@ -194,23 +169,16 @@ export const ContentDetailView: React.FC<ContentDetailViewProps> = ({
         );
         
       case ContentType.IMAGE:
-        // Try to access image content properties directly from the content object
-        const contentWithImage = content as any;
-        const imageContent = contentWithImage.imageContent;
-        const imageData = typeSpecificData as ImageContent;
-
-        // Use either from the nested structure or typeSpecificData
-        const mediaForImage = mediaAsset; 
-        const caption = imageContent?.caption || imageData?.caption;
-        const altText = imageContent?.altText || imageData?.altText;
+        // Get image content and media asset
+        const imageContent = contentAny.imageContent;
         
-        if (mediaForImage) {
+        if (imageContent?.mediaAsset) {
           return (
             <div className="p-4 flex justify-center">
               <MediaPreview 
-                mediaAsset={mediaForImage}
-                caption={caption}
-                alt={altText || content.title}
+                mediaAsset={imageContent.mediaAsset}
+                caption={imageContent.caption}
+                alt={imageContent.altText || content.title}
                 showControls={true}
                 className="max-w-full"
                 showFullScreenButton={true}
@@ -218,43 +186,24 @@ export const ContentDetailView: React.FC<ContentDetailViewProps> = ({
             </div>
           );
         }
+        
         // Fallback if no media asset is available
         return (
           <div className="flex items-center justify-center h-full p-8 flex-col text-gray-500">
             <FileText className="h-12 w-12 mb-2 text-gray-400" />
-            <p>Content preview not available</p>
+            <p>Image content preview not available</p>
           </div>
         );
         
       case ContentType.VIDEO:
-      case ContentType.AUDIO:
-      case ContentType.DOCUMENT:
-        // For media-based content, use MediaPreview if we have a mediaAsset
-        if (mediaAsset) {
-          const caption = (() => {
-            switch (content.type) {
-              case ContentType.VIDEO:
-                return (typeSpecificData as VideoContent)?.caption || 
-                       (content as any)?.videoContent?.caption ||
-                       undefined;
-              case ContentType.AUDIO:
-                return (typeSpecificData as AudioContent)?.caption || 
-                       (content as any)?.audioContent?.caption ||
-                       undefined;
-              case ContentType.DOCUMENT:
-                return (typeSpecificData as DocumentContent)?.description || 
-                       (content as any)?.documentContent?.description ||
-                       undefined;
-              default:
-                return undefined;
-            }
-          })();
-          
+        const videoContent = contentAny.videoContent;
+        
+        if (videoContent?.mediaAsset) {
           return (
             <div className="p-4 flex justify-center">
               <MediaPreview 
-                mediaAsset={mediaAsset}
-                caption={caption}
+                mediaAsset={videoContent.mediaAsset}
+                caption={videoContent.caption}
                 alt={content.title}
                 showControls={true}
                 className="max-w-full"
@@ -263,11 +212,64 @@ export const ContentDetailView: React.FC<ContentDetailViewProps> = ({
             </div>
           );
         }
+        
         // Fallback if no media asset is available
         return (
           <div className="flex items-center justify-center h-full p-8 flex-col text-gray-500">
             <FileText className="h-12 w-12 mb-2 text-gray-400" />
-            <p>Content preview not available</p>
+            <p>Video content preview not available</p>
+          </div>
+        );
+        
+      case ContentType.AUDIO:
+        const audioContent = contentAny.audioContent;
+        
+        if (audioContent?.mediaAsset) {
+          return (
+            <div className="p-4 flex justify-center">
+              <MediaPreview 
+                mediaAsset={audioContent.mediaAsset}
+                caption={audioContent.caption}
+                alt={content.title}
+                showControls={true}
+                className="max-w-full"
+                showFullScreenButton={true}
+              />
+            </div>
+          );
+        }
+        
+        // Fallback if no media asset is available
+        return (
+          <div className="flex items-center justify-center h-full p-8 flex-col text-gray-500">
+            <FileText className="h-12 w-12 mb-2 text-gray-400" />
+            <p>Audio content preview not available</p>
+          </div>
+        );
+        
+      case ContentType.DOCUMENT:
+        const documentContent = contentAny.documentContent;
+        
+        if (documentContent?.mediaAsset) {
+          return (
+            <div className="p-4 flex justify-center">
+              <MediaPreview 
+                mediaAsset={documentContent.mediaAsset}
+                caption={documentContent.description}
+                alt={content.title}
+                showControls={true}
+                className="max-w-full"
+                showFullScreenButton={true}
+              />
+            </div>
+          );
+        }
+        
+        // Fallback if no media asset is available
+        return (
+          <div className="flex items-center justify-center h-full p-8 flex-col text-gray-500">
+            <FileText className="h-12 w-12 mb-2 text-gray-400" />
+            <p>Document content preview not available</p>
           </div>
         );
         
@@ -282,13 +284,10 @@ export const ContentDetailView: React.FC<ContentDetailViewProps> = ({
   
   // Display additional content details based on type
   const renderAdditionalDetails = () => {
-    if (!typeSpecificData) return null;
-    
     switch (content.type) {
       case ContentType.VIDEO:
-      case ContentType.AUDIO:
-        const mediaContent = typeSpecificData as (VideoContent | AudioContent);
-        if (mediaContent.transcript) {
+        const videoContent = contentAny.videoContent;
+        if (videoContent?.transcript) {
           return (
             <>
               <Separator />
@@ -296,7 +295,26 @@ export const ContentDetailView: React.FC<ContentDetailViewProps> = ({
                 <div className="w-full">
                   <h4 className="text-sm font-medium text-gray-500 mb-2">Transcript</h4>
                   <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md text-sm whitespace-pre-wrap">
-                    {mediaContent.transcript}
+                    {videoContent.transcript}
+                  </div>
+                </div>
+              </CardFooter>
+            </>
+          );
+        }
+        return null;
+        
+      case ContentType.AUDIO:
+        const audioContent = contentAny.audioContent;
+        if (audioContent?.transcript) {
+          return (
+            <>
+              <Separator />
+              <CardFooter className="pt-4">
+                <div className="w-full">
+                  <h4 className="text-sm font-medium text-gray-500 mb-2">Transcript</h4>
+                  <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md text-sm whitespace-pre-wrap">
+                    {audioContent.transcript}
                   </div>
                 </div>
               </CardFooter>

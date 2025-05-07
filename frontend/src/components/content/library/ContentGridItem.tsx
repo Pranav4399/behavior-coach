@@ -1,8 +1,9 @@
 import React from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Content, ContentStatus } from '@/types/content';
+import { Content, ContentStatus, ContentType } from '@/types/content';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Trash2, FileText, Video, Image as ImageIcon, AudioLines, FileQuestion } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +29,40 @@ export const ContentGridItem: React.FC<ContentGridItemProps> = ({
 }) => {
   const router = useRouter();
 
+  // Get the appropriate media data based on content type
+  const getMediaData = () => {
+    // Cast to any to access potential nested properties
+    const contentAny = content as any;
+    
+    if (content.type === ContentType.IMAGE && contentAny.imageContent?.mediaAsset?.thumbnailUrl) {
+      return {
+        thumbnailUrl: contentAny.imageContent.mediaAsset.thumbnailUrl,
+        altText: contentAny.imageContent.altText || content.title
+      };
+    }
+    
+    // For other types, return null to use the fallback
+    return null;
+  };
+
+  const mediaData = getMediaData();
+
+  // Get the appropriate icon based on content type
+  const getContentTypeIcon = () => {
+    switch (content.type) {
+      case ContentType.TEXT:
+        return <FileText className="h-10 w-10 text-gray-400" />;
+      case ContentType.IMAGE:
+        return <ImageIcon className="h-10 w-10 text-gray-400" />;
+      case ContentType.VIDEO:
+        return <Video className="h-10 w-10 text-gray-400" />;
+      case ContentType.AUDIO:
+        return <AudioLines className="h-10 w-10 text-gray-400" />;
+      default:
+        return <FileQuestion className="h-10 w-10 text-gray-400" />;
+    }
+  };
+
   return (
     <div 
       key={content.id}
@@ -39,9 +74,19 @@ export const ContentGridItem: React.FC<ContentGridItemProps> = ({
       onDoubleClick={() => onSelect(content)}
     >
       {/* Content type indicator and preview */}
-      <div className="h-32 bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-        {/* This would be replaced with actual preview based on content type */}
-        <div className="text-4xl text-gray-400 capitalize">{content.type}</div>
+      <div className="h-32 bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+        {mediaData?.thumbnailUrl ? (
+          <img 
+            src={mediaData.thumbnailUrl} 
+            alt={mediaData.altText} 
+            className="object-cover w-full h-full"
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center">
+            {getContentTypeIcon()}
+            <div className="text-xs text-gray-500 mt-2 capitalize">{content.type}</div>
+          </div>
+        )}
       </div>
       
       {/* Content details */}

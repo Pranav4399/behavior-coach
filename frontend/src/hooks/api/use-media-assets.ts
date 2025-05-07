@@ -282,10 +282,10 @@ export function useDeleteMediaAsset() {
 export function usePresignedUrl(id: string, expiresIn: number = 3600) {
   return useQuery({
     queryKey: ['mediaAssets', id, 'presignedUrl', expiresIn],
-    queryFn: () => apiClient<{ success: boolean; url: string; }>(`/mediaAssets/${id}/presigned-url`, {
+    queryFn: () => apiClient<{ success: boolean; presignedUrl: string; }>(`/mediaAssets/${id}/presigned-url`, {
       method: 'GET',
       params: { expiresIn: expiresIn.toString() },
-    }).then(response => response.url),
+    }).then(response => response.presignedUrl),
     enabled: !!id,
   });
 }
