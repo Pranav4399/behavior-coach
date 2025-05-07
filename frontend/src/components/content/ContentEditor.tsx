@@ -1,37 +1,36 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { MediaSelector, MediaUploader } from '@/components/media';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Spinner } from '@/components/ui/spinner';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { 
-  ContentStatus, 
-  ContentType, 
-  ContentWithDetails, 
-  ContentFormState,
-} from '@/types/content';
-import { MediaAsset } from '@/types/mediaAsset';
-import { contentTypeRequiresMedia, getRequiredMediaType } from '@/types/contentMedia';
-import { MediaSelector } from '@/components/media';
-import { MediaUploader } from '@/components/media';
-import { 
-  useTextContent,
-  useImageContent,
-  useVideoContent,
+import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  getContent,
   useAudioContent,
   useDocumentContent,
+  useImageContent,
   useQuizContent,
   useReflectionContent,
   useTemplateContent,
+  useTextContent,
   useUpdateContent,
   useUpdateTypeSpecificContent,
-  getContent
+  useVideoContent
 } from '@/hooks/api/use-content';
-import { getThumbnailUrl, formatFileSize } from '@/utils/media';
-import { QuizQuestion } from '@/types/content';
+import {
+  ContentFormState,
+  ContentStatus,
+  ContentType,
+  ContentWithDetails,
+  QuizQuestion,
+} from '@/types/content';
+import { contentTypeRequiresMedia, getRequiredMediaType } from '@/types/contentMedia';
+import { MediaAsset } from '@/types/mediaAsset';
+import { formatFileSize, getThumbnailUrl } from '@/utils/media';
+import React, { useEffect, useState } from 'react';
 import WhatsAppPreview from './WhatsAppPreview';
 import QuizEditor from './quiz/QuizEditor';
 
