@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Sparkles, RefreshCw, Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { RefreshCw, Search, Sparkles } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import React, { useState } from 'react';
 
 // Witty 404 messages to rotate through
 const WITTY_MESSAGES = [
@@ -106,7 +107,7 @@ export default function NotFoundPage() {
         {/* Fake search bar that does nothing useful */}
         <form onSubmit={handleSearch} className="mb-8 max-w-md mx-auto">
           <div className="relative">
-            <input
+            <Input
               type="text"
               placeholder={searchAttempts >= 2 ? "Really? Still trying?" : "Search for what you were looking for..."}
               className="w-full pl-10 pr-4 py-2 border rounded-lg border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary"

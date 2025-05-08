@@ -20,7 +20,8 @@ export function generateToken(userId: string): string {
   
   return jwt.sign(
     { id: userId }, 
-    secret
+    secret,
+    { expiresIn: '24h' } // Token expires in 24 hours
   );
 }
 

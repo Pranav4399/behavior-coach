@@ -1,5 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient, API_BASE_URL, getAuthToken } from '@/lib/api/client';
+import { API_BASE_URL, apiClient } from '@/lib/api/client';
 import { ApiResponse } from '@/types/common';
 import {
   MediaAssetFilterOptions,
@@ -9,6 +8,7 @@ import {
   MediaUploadRequest,
   UpdateMediaAssetDto
 } from '@/types/mediaAsset';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 /**
  * Get a list of media assets with filtering
@@ -73,13 +73,11 @@ export function useMediaAssetUpload() {
         formData.append('metadata', JSON.stringify(metadata));
       }
 
-      // Use fetch for the upload
+      // Use fetch for the upload - always include credentials for cookie auth
       const response = await fetch(`${API_BASE_URL}/mediaAssets`, {
         method: 'POST',
         body: formData,
-        headers: {
-          Authorization: `Bearer ${getAuthToken() || ''}`,
-        },
+        credentials: 'include', // Always include cookies for authentication
       });
 
       if (!response.ok) {
@@ -226,11 +224,8 @@ export function useMediaUploadWithProgress() {
       // Open and send the request
       xhr.open('POST', `${API_BASE_URL}/mediaAssets`);
       
-      // Get auth token using the same function as main API client
-      const token = getAuthToken();
-      if (token) {
-        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-      }
+      // Enable credentials to include cookies for authentication
+      xhr.withCredentials = true;
       
       xhr.send(formData);
     });

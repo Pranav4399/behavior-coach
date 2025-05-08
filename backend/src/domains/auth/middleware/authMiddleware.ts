@@ -1,9 +1,9 @@
-import { Request, Response, NextFunction } from 'express';
-import { AppError } from '../../../common/middleware/errorHandler';
-import { verifyToken } from '../utils/jwt';
-import { AuthService } from '../services/authService';
+import { NextFunction, Request, Response } from 'express';
 import prisma from '../../../../prisma/prisma';
+import { AppError } from '../../../common/middleware/errorHandler';
 import { IS_PLATFORM_ADMIN } from '../../../config/permissions';
+import { AuthService } from '../services/authService';
+import { verifyToken } from '../utils/jwt';
 
 const authService = new AuthService();
 
@@ -38,12 +38,11 @@ export const authMiddleware = async (
   next: NextFunction
 ) => {
   try {
-    // Get token from Authorization header
-    let token;
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.startsWith('Bearer')
-    ) {
+    // Get token from cookie or from Authorization header (for API clients)
+    let token = req.cookies?.auth_token;
+    
+    // Fallback to Authorization header if cookie is not available
+    if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
       token = req.headers.authorization.split(' ')[1];
     }
 

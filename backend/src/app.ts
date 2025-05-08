@@ -1,25 +1,26 @@
-import express, { Express, Request, Response, NextFunction } from 'express';
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
+import express, { Express, Request, Response } from 'express';
+import { rateLimit } from 'express-rate-limit';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import { rateLimit } from 'express-rate-limit';
 import swaggerJSDoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
-import { errorHandler, AppError } from './common/middleware/errorHandler';
+import { errorHandler } from './common/middleware/errorHandler';
 import { indexRoutes } from './common/routes';
-import { organizationRoutes } from './domains/organizations/routes/organizationRoutes';
-import { organizationMeRoutes } from './domains/organizations/routes/organizationMeRoutes';
-import { authRoutes } from './domains/auth/routes/authRoutes';
-import { userRoutes } from './domains/user/routes/userRoutes';
-import roleRoutes from './domains/roles/routes/roleRoutes';
-import { workerRoutes, workerCsvRoutes, workerSegmentRoutes } from './domains/workers/routes';
-import { segmentRoutes } from './domains/segments/routes';
-import mediaAssetRoutes from './domains/mediaAsset/routes/mediaAssetRoutes';
-import contentRoutes from './domains/content/routes/contentRoutes';
 import metricsRoutes from './common/routes/metrics.routes';
-import { ENV } from './config/env';
 import uploadsRoutes from './common/routes/uploads.routes';
 import { InitializationService } from './common/services/init.service';
+import { ENV } from './config/env';
+import { authRoutes } from './domains/auth/routes/authRoutes';
+import contentRoutes from './domains/content/routes/contentRoutes';
+import mediaAssetRoutes from './domains/mediaAsset/routes/mediaAssetRoutes';
+import { organizationMeRoutes } from './domains/organizations/routes/organizationMeRoutes';
+import { organizationRoutes } from './domains/organizations/routes/organizationRoutes';
+import roleRoutes from './domains/roles/routes/roleRoutes';
+import { segmentRoutes } from './domains/segments/routes';
+import { userRoutes } from './domains/user/routes/userRoutes';
+import { workerCsvRoutes, workerRoutes, workerSegmentRoutes } from './domains/workers/routes';
 
 // Initialize express app
 const app: Express = express();
@@ -40,6 +41,7 @@ app.use(helmet());
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Logging middleware
 app.use(morgan('dev'));

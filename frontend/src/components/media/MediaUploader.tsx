@@ -1,11 +1,12 @@
-import React, { useCallback, useState, useRef } from 'react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Spinner } from '@/components/ui/spinner';
 import { useMediaUploadWithProgress, validateMediaFile } from '@/hooks/api/use-media-assets';
 import { MediaUploadProgress, MediaUploadRequest } from '@/types/mediaAsset';
-import { formatFileSize, isImage, isVideo, isAudio, isDocument } from '@/utils/media';
+import { formatFileSize, isAudio, isDocument, isImage, isVideo } from '@/utils/media';
+import React, { useCallback, useRef, useState } from 'react';
+import { Input } from '../ui/input';
 
 interface MediaUploaderProps {
   organizationId: string;
@@ -206,7 +207,7 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
   return (
     <div className={`${className}`}>
       {/* Hidden file input */}
-      <input
+      <Input
         ref={fileInputRef}
         type="file"
         className="hidden"

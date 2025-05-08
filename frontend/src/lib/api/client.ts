@@ -1,5 +1,5 @@
-import { ApiError } from "@/types/common";
 import { useAuthStore } from "@/store/auth";
+import { ApiError } from "@/types/common";
 import logger from "./logging";
 
 // Configuration constants
@@ -222,10 +222,10 @@ async function executeRequest<T>(
     ...(options.headers || {}),
   };
 
-  // Add auth token if required
+  // Add auth token if required (still keeping for API clients)
   if (options.withAuth !== false) {
     const token = getAuthToken();
-    if (token) {
+    if (token && token !== 'HTTP_ONLY_COOKIE') {
       headers['Authorization'] = `Bearer ${token}`;
     }
   }
@@ -234,7 +234,7 @@ async function executeRequest<T>(
   const requestOptions: RequestInit = {
     method,
     headers,
-    credentials: 'include',
+    credentials: 'include', // Always include cookies in requests
   };
 
   // Add body data if present and not a GET request

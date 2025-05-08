@@ -1,13 +1,13 @@
 'use client';
 
-import * as React from 'react';
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import * as authApi from '../lib/api/auth';
 import { LoadingOverlay } from '@/components/auth/loading-overlay';
 import { withMinDuration } from '@/hooks/useLoading';
-import { usePermissionsStore } from '@/store/permissions';
 import { useAuthStore, User } from '@/store/auth';
+import { usePermissionsStore } from '@/store/permissions';
+import { useRouter } from 'next/navigation';
+import * as React from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import * as authApi from '../lib/api/auth';
 
 interface AuthContextType {
   user: User | null;
@@ -59,8 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       );
       
       setLoadingMessage('Setting up your account...');
-      // Store auth data in Zustand
-      setToken(response.data.token);
+      // Store user in Zustand, but not the token (now in HTTP-only cookie)
       setUser(response.data.user);
       
       // Fetch user permissions
@@ -82,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [router, fetchPermissions, setToken, setUser, redirectUrl, clearRedirectUrl]);
+  }, [router, fetchPermissions, setUser, redirectUrl, clearRedirectUrl]);
 
   const logout = useCallback(async () => {
     try {
@@ -92,6 +91,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Wrap logout operations with minimum duration
       await withMinDuration(
         (async () => {
+          // Call the backend logout endpoint to clear the cookie
+          await authApi.logout();
+          
           // Client-side logout operations using Zustand
           clearAuth();
           // Clear permissions

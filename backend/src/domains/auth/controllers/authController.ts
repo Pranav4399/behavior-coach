@@ -1,6 +1,7 @@
-import { Request, Response, NextFunction } from 'express';
-import { AuthService } from '../services/authService';
+import { NextFunction, Request, Response } from 'express';
 import { AppError } from '../../../common/middleware/errorHandler';
+import { AuthService } from '../services/authService';
+import { generateToken, verifyToken } from '../utils/jwt';
 
 const authService = new AuthService();
 
@@ -60,6 +61,15 @@ export class AuthController {
         organizationId
       });
 
+      // Set token as HTTP-only cookie
+      res.cookie('auth_token', result.token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        path: '/'
+      });
+
       // Return success response
       res.status(201).json({
         status: 'success',
@@ -70,8 +80,8 @@ export class AuthController {
             name: result.user.name,
             roleId: result.user.roleId,
             organizationId: result.user.organizationId
-          },
-          token: result.token
+          }
+          // Don't include token in response body anymore
         }
       });
     } catch (error: any) {
@@ -123,6 +133,15 @@ export class AuthController {
       // Login user
       const result = await authService.login(email, password);
 
+      // Set token as HTTP-only cookie
+      res.cookie('auth_token', result.token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production', // Only use secure in production
+        sameSite: 'strict',
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        path: '/'
+      });
+
       // Return success response
       res.status(200).json({
         status: 'success',
@@ -133,8 +152,8 @@ export class AuthController {
             name: result.user.name,
             roleId: result.user.roleId,
             organizationId: result.user.organizationId
-          },
-          token: result.token
+          }
+          // Don't include token in response body anymore
         }
       });
     } catch (error: any) {
@@ -207,6 +226,85 @@ export class AuthController {
         }
       });
     } catch (error: any) {
+      next(error);
+    }
+  }
+
+  /**
+   * @swagger
+   * /api/auth/logout:
+   *   post:
+   *     summary: Logout the current user
+   *     tags: [Auth]
+   *     responses:
+   *       200:
+   *         description: Logout successful
+   */
+  async logout(req: Request, res: Response) {
+    // Clear the auth cookie
+    res.clearCookie('auth_token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/'
+    });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Logged out successfully'
+    });
+  }
+
+  /**
+   * @swagger
+   * /api/auth/refresh:
+   *   post:
+   *     summary: Refresh the authentication token
+   *     tags: [Auth]
+   *     security:
+   *       - cookieAuth: []
+   *     responses:
+   *       200:
+   *         description: Token refreshed successfully
+   *       401:
+   *         description: Not authenticated
+   */
+  async refreshToken(req: Request, res: Response, next: NextFunction) {
+    try {
+      // Get token from cookie
+      const token = req.cookies?.auth_token;
+      
+      if (!token) {
+        return next(new AppError('Authentication required. Please log in.', 401));
+      }
+      
+      try {
+        // Verify the existing token
+        const decoded = verifyToken(token);
+        
+        // Generate a new token
+        const newToken = generateToken(decoded.id);
+        
+        // Set the new token as a cookie
+        res.cookie('auth_token', newToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: 24 * 60 * 60 * 1000, // 24 hours
+          path: '/'
+        });
+        
+        // Return success response
+        res.status(200).json({
+          status: 'success',
+          message: 'Token refreshed successfully'
+        });
+      } catch (error) {
+        // If token verification fails, clear the cookie and return unauthorized
+        res.clearCookie('auth_token');
+        return next(new AppError('Invalid or expired token. Please log in again.', 401));
+      }
+    } catch (error) {
       next(error);
     }
   }
